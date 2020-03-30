@@ -3,6 +3,7 @@
 use crate::lexerror::*;
 use crate::loc::*;
 use crate::token::*;
+use std::collections::HashMap;
 
 fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
     // 解析結果を保存するベクター
@@ -26,6 +27,7 @@ fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
         // ここでそれぞれの関数にinputとposを渡す
         match input[pos] {
             b'@' => lex_a_token!(lex_at_sign(input, line, pos)),
+            b'=' => lex_a_token!(lex_equal(input, line, pos)),
             b'+' => lex_a_token!(lex_plus(input, line, pos)),
             b'-' => lex_a_token!(lex_minus(input, line, pos)),
             b'&' => lex_a_token!(lex_and(input, line, pos)),
@@ -105,6 +107,11 @@ fn lex_symbol(input: &[u8], line: usize, start: usize) -> Result<(Token, usize),
     unimplemented!()
 }
 
+fn lex_equal(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
+    consume_byte(input, line, start, b'=')
+        .map(|(_, end)| (Token::equal(Loc::new(line, start, end)), end))
+}
+
 fn lex_plus(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
     consume_byte(input, line, start, b'+')
         .map(|(_, end)| (Token::plus(Loc::new(line, start, end)), end))
@@ -161,7 +168,7 @@ fn lex_kbd(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), Le
 
 #[test]
 fn test_lex() {
-    let input = "@+-&|! @ ;()";
+    let input = "@+-&|! @ ;()=";
     let res = lex(input, 0);
     assert!(res.is_ok());
     let tokens = res.ok().unwrap();
@@ -176,6 +183,7 @@ fn test_lex() {
         Token::semicolon(Loc::new(0, 9, 10)),
         Token::lparen(Loc::new(0, 10, 11)),
         Token::rparen(Loc::new(0, 11, 12)),
+        Token::equal(Loc::new(0, 12, 13)),
     ];
     assert_eq!(tokens.len(), expect.len());
     for (i, tok) in tokens.into_iter().enumerate() {
