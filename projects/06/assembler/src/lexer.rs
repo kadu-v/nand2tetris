@@ -79,6 +79,15 @@ fn recoginize_many(input: &[u8], mut pos: usize, f: impl Fn(u8) -> bool) -> usiz
     pos
 }
 
+fn peek_char(input: &[u8], pos: usize) -> Option<u8> {
+    let nxt = pos + 1;
+    if nxt >= input.len() {
+        None
+    } else {
+        Some(input[nxt])
+    }
+}
+
 // lexのヘルパーメソッド
 fn lex_at_sign(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
     consume_byte(input, line, start, b'@')
