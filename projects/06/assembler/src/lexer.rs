@@ -79,6 +79,7 @@ fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
             b'(' => lex_a_token!(lex_lparen(input, line, pos)),
             b')' => lex_a_token!(lex_rparen(input, line, pos)),
             b'0'..=b'9' => lex_a_token!(lex_number(input, line, pos)),
+            b'a'..=b'z' | b'A'..=b'Z' | b'.' | b'_' => lex_a_token!(lex_symbol(input, line, pos)),
             b' ' | b'\n' | b'\t' => {
                 let ((), p) = skip_whitespaces(input, pos)?;
                 pos = p;
@@ -155,7 +156,6 @@ fn lex_at_sign(input: &[u8], line: usize, start: usize) -> Result<(Token, usize)
 
 fn lex_number(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
     use std::str::from_utf8;
-
     // 入力に数字が続くかぎり進める
     let end = recoginize_many(input, start, |b| b"1234567890".contains(&b));
     let n = from_utf8(&input[start..end]).unwrap().parse().unwrap();
@@ -163,7 +163,14 @@ fn lex_number(input: &[u8], line: usize, start: usize) -> Result<(Token, usize),
 }
 
 fn lex_symbol(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
+    use std::str::from_utf8;
+    let end = recoginize_many(input, start, |b| {
+        let c = b as char;
+        (c.is_alphabetic() || c.is_digit(10)) && !b"^[]\\`".contains(&b)
+    });
+
+    let s = from_utf8(&input[start..end]).unwrap();
+    Ok((Token::symbol(s, Loc::new(line, start, end)), end))
 }
 
 fn lex_equal(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
@@ -227,9 +234,9 @@ fn lex_kbd(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), Le
 
 #[test]
 fn test_lex() {
-    let input = "@+-&|! @ ;()= 1234";
+    let input = "@+-&|! @ ;()= 1234 SUM i Loop";
     let res = lex(input, 0);
-    assert!(res.is_ok());
+    //assert_eq!(res, Err(LexError::eof(Loc::new(0, 1, 2))));
     let tokens = res.ok().unwrap();
     let expect = vec![
         Token::at_sign(Loc::new(0, 0, 1)),
@@ -244,6 +251,9 @@ fn test_lex() {
         Token::rparen(Loc::new(0, 11, 12)),
         Token::equal(Loc::new(0, 12, 13)),
         Token::number(1234, Loc::new(0, 14, 18)),
+        Token::symbol("SUM", Loc::new(0, 19, 22)),
+        Token::symbol("i", Loc::new(0, 23, 24)),
+        Token::symbol("Loop", Loc::new(0, 25, 29)),
     ];
     assert_eq!(tokens.len(), expect.len());
     for (i, tok) in tokens.into_iter().enumerate() {
