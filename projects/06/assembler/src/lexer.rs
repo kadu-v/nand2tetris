@@ -26,6 +26,7 @@ fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
         // ここでそれぞれの関数にinputとposを渡す
         match input[pos] {
             b'@' => lex_a_token!(lex_at_sign(input, line, pos)),
+            b'+' => lex_a_token!(lex_plus(input, line, pos)),
             b => {
                 return Err(LexError::invalid_char(
                     b as char,
@@ -100,7 +101,8 @@ fn lex_amd(iinput: &[u8], line: usize, start: usize) -> Result<(Token, usize), L
 }
 
 fn lex_plus(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
+    consume_byte(input, line, start, b'+')
+        .map(|(_, end)| (Token::plus(Loc::new(line, start, end)), end))
 }
 
 fn lex_minus(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
@@ -159,6 +161,38 @@ fn lex_rparen(input: &[u8], line: usize, start: usize) -> Result<(Token, usize),
     unimplemented!()
 }
 
+fn lex_sp(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
+    unimplemented!()
+}
+
+fn lex_lcl(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
+    unimplemented!()
+}
+
+fn lex_arg(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
+    unimplemented!()
+}
+
+fn lex_this(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
+    unimplemented!()
+}
+
+fn lex_that(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
+    unimplemented!()
+}
+
+fn lex_r(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
+    unimplemented!()
+}
+
+fn lex_screen(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
+    unimplemented!()
+}
+
+fn lex_kbd(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
+    unimplemented!()
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///
 ///
@@ -167,11 +201,14 @@ fn lex_rparen(input: &[u8], line: usize, start: usize) -> Result<(Token, usize),
 
 #[test]
 fn test_lex() {
-    let input = "@";
+    let input = "@+";
     let res = lex(input, 0);
     assert!(res.is_ok());
     let tokens = res.ok().unwrap();
-    let expect = vec![Token::at_sign(Loc::new(0, 0, 1))];
+    let expect = vec![
+        Token::at_sign(Loc::new(0, 0, 1)),
+        Token::plus(Loc::new(0, 1, 2)),
+    ];
     assert_eq!(tokens.len(), expect.len());
     for (i, tok) in tokens.into_iter().enumerate() {
         assert_eq!(expect[i], tok);
