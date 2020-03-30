@@ -105,34 +105,6 @@ fn lex_symbol(input: &[u8], line: usize, start: usize) -> Result<(Token, usize),
     unimplemented!()
 }
 
-fn lex_a(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_m(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_d(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_am(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_ad(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_md(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_amd(iinput: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
 fn lex_plus(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
     consume_byte(input, line, start, b'+')
         .map(|(_, end)| (Token::plus(Loc::new(line, start, end)), end))
@@ -158,34 +130,6 @@ fn lex_bang(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), L
         .map(|(_, end)| (Token::bang(Loc::new(line, start, end)), end))
 }
 
-fn lex_jgt(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_jeq(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_jge(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_jlt(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_jne(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_jle(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_jmp(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
 fn lex_semicolon(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
     consume_byte(input, line, start, b';')
         .map(|(_, end)| (Token::semicolon(Loc::new(line, start, end)), end))
@@ -199,30 +143,6 @@ fn lex_lparen(input: &[u8], line: usize, start: usize) -> Result<(Token, usize),
 fn lex_rparen(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
     consume_byte(input, line, start, b')')
         .map(|(_, end)| (Token::rparen(Loc::new(line, start, end)), end))
-}
-
-fn lex_sp(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_lcl(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_arg(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_this(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_that(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_r(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
 }
 
 fn lex_screen(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
