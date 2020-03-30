@@ -31,6 +31,10 @@ fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
             b'&' => lex_a_token!(lex_and(input, line, pos)),
             b'|' => lex_a_token!(lex_or(input, line, pos)),
             b'!' => lex_a_token!(lex_bang(input, line, pos)),
+            b' ' | b'\n' | b'\t' => {
+                let ((), p) = skip_whitespaces(input, pos)?;
+                pos = p;
+            }
             b => {
                 return Err(LexError::invalid_char(
                     b as char,
@@ -60,6 +64,19 @@ fn consume_byte(input: &[u8], line: usize, pos: usize, b: u8) -> Result<(u8, usi
     }
 
     Ok((b, pos + 1))
+}
+
+fn skip_whitespaces(input: &[u8], pos: usize) -> Result<((), usize), LexError> {
+    let pos = recoginize_many(input, pos, |b| b" \n\t".contains(&b));
+    Ok(((), pos))
+}
+
+fn recoginize_many(input: &[u8], mut pos: usize, f: impl Fn(u8) -> bool) -> usize {
+    while pos <= input.len() && f(input[pos]) {
+        pos += 1;
+    }
+
+    pos
 }
 
 // lexのヘルパーメソッド
@@ -209,7 +226,7 @@ fn lex_kbd(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), Le
 
 #[test]
 fn test_lex() {
-    let input = "@+-&|!";
+    let input = "@+-&|! @";
     let res = lex(input, 0);
     assert!(res.is_ok());
     let tokens = res.ok().unwrap();
@@ -220,6 +237,7 @@ fn test_lex() {
         Token::and(Loc::new(0, 3, 4)),
         Token::or(Loc::new(0, 4, 5)),
         Token::bang(Loc::new(0, 5, 6)),
+        Token::at_sign(Loc::new(0, 7, 8)),
     ];
     assert_eq!(tokens.len(), expect.len());
     for (i, tok) in tokens.into_iter().enumerate() {
