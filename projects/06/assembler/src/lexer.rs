@@ -43,7 +43,10 @@ fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
         ("R15", TokenKind::R15),
         ("SCREEN", TokenKind::SCREEN),
         ("KBD", TokenKind::KBD),
-    ];
+    ]
+    .into_iter()
+    .cloned()
+    .collect::<HashMap<_, TokenKind>>();
 
     // 解析結果を保存するベクター
     let mut tokens = Vec::new();
@@ -119,8 +122,19 @@ fn recoginize_many(input: &[u8], mut pos: usize, f: impl Fn(u8) -> bool) -> usiz
     while pos <= input.len() && f(input[pos]) {
         pos += 1;
     }
-
     pos
+}
+
+fn lookup_symbol<'a>(
+    symbol: &'a str,
+    loc: Loc,
+    keywords: &HashMap<&str, TokenKind<'a>>,
+) -> Token<'a> {
+    if let Some(kind) = keywords.get(symbol) {
+        return Token::to_token(kind.clone(), loc);
+    } else {
+        return Token::symbol(symbol, loc);
+    }
 }
 
 fn peek_char(input: &[u8], pos: usize) -> Option<u8> {
