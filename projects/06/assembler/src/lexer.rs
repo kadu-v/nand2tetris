@@ -78,6 +78,7 @@ fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
             b';' => lex_a_token!(lex_semicolon(input, line, pos)),
             b'(' => lex_a_token!(lex_lparen(input, line, pos)),
             b')' => lex_a_token!(lex_rparen(input, line, pos)),
+            b'0'..=b'9' => lex_a_token!(lex_number(input, line, pos)),
             b' ' | b'\n' | b'\t' => {
                 let ((), p) = skip_whitespaces(input, pos)?;
                 pos = p;
@@ -119,7 +120,7 @@ fn skip_whitespaces(input: &[u8], pos: usize) -> Result<((), usize), LexError> {
 }
 
 fn recoginize_many(input: &[u8], mut pos: usize, f: impl Fn(u8) -> bool) -> usize {
-    while pos <= input.len() && f(input[pos]) {
+    while pos < input.len() && f(input[pos]) {
         pos += 1;
     }
     pos
@@ -153,7 +154,12 @@ fn lex_at_sign(input: &[u8], line: usize, start: usize) -> Result<(Token, usize)
 }
 
 fn lex_number(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
+    use std::str::from_utf8;
+
+    // 入力に数字が続くかぎり進める
+    let end = recoginize_many(input, start, |b| b"1234567890".contains(&b));
+    let n = from_utf8(&input[start..end]).unwrap().parse().unwrap();
+    Ok((Token::number(n, Loc::new(line, start, end)), end))
 }
 
 fn lex_symbol(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
@@ -221,7 +227,7 @@ fn lex_kbd(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), Le
 
 #[test]
 fn test_lex() {
-    let input = "@+-&|! @ ;()=";
+    let input = "@+-&|! @ ;()= 1234";
     let res = lex(input, 0);
     assert!(res.is_ok());
     let tokens = res.ok().unwrap();
@@ -237,6 +243,7 @@ fn test_lex() {
         Token::lparen(Loc::new(0, 10, 11)),
         Token::rparen(Loc::new(0, 11, 12)),
         Token::equal(Loc::new(0, 12, 13)),
+        Token::number(1234, Loc::new(0, 14, 18)),
     ];
     assert_eq!(tokens.len(), expect.len());
     for (i, tok) in tokens.into_iter().enumerate() {
