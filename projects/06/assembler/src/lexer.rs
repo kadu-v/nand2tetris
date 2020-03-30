@@ -31,6 +31,9 @@ fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
             b'&' => lex_a_token!(lex_and(input, line, pos)),
             b'|' => lex_a_token!(lex_or(input, line, pos)),
             b'!' => lex_a_token!(lex_bang(input, line, pos)),
+            b';' => lex_a_token!(lex_semicolon(input, line, pos)),
+            b'(' => lex_a_token!(lex_lparen(input, line, pos)),
+            b')' => lex_a_token!(lex_rparen(input, line, pos)),
             b' ' | b'\n' | b'\t' => {
                 let ((), p) = skip_whitespaces(input, pos)?;
                 pos = p;
@@ -184,15 +187,18 @@ fn lex_jmp(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), Le
 }
 
 fn lex_semicolon(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
+    consume_byte(input, line, start, b';')
+        .map(|(_, end)| (Token::semicolon(Loc::new(line, start, end)), end))
 }
 
 fn lex_lparen(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
+    consume_byte(input, line, start, b'(')
+        .map(|(_, end)| (Token::lparen(Loc::new(line, start, end)), end))
 }
 
 fn lex_rparen(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
+    consume_byte(input, line, start, b')')
+        .map(|(_, end)| (Token::rparen(Loc::new(line, start, end)), end))
 }
 
 fn lex_sp(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
@@ -235,7 +241,7 @@ fn lex_kbd(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), Le
 
 #[test]
 fn test_lex() {
-    let input = "@+-&|! @";
+    let input = "@+-&|! @ ;()";
     let res = lex(input, 0);
     assert!(res.is_ok());
     let tokens = res.ok().unwrap();
@@ -247,6 +253,9 @@ fn test_lex() {
         Token::or(Loc::new(0, 4, 5)),
         Token::bang(Loc::new(0, 5, 6)),
         Token::at_sign(Loc::new(0, 7, 8)),
+        Token::semicolon(Loc::new(0, 9, 10)),
+        Token::lparen(Loc::new(0, 10, 11)),
+        Token::rparen(Loc::new(0, 11, 12)),
     ];
     assert_eq!(tokens.len(), expect.len());
     for (i, tok) in tokens.into_iter().enumerate() {
