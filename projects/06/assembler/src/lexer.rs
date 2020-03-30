@@ -27,6 +27,10 @@ fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
         match input[pos] {
             b'@' => lex_a_token!(lex_at_sign(input, line, pos)),
             b'+' => lex_a_token!(lex_plus(input, line, pos)),
+            b'-' => lex_a_token!(lex_minus(input, line, pos)),
+            b'&' => lex_a_token!(lex_and(input, line, pos)),
+            b'|' => lex_a_token!(lex_or(input, line, pos)),
+            b'!' => lex_a_token!(lex_bang(input, line, pos)),
             b => {
                 return Err(LexError::invalid_char(
                     b as char,
@@ -106,19 +110,23 @@ fn lex_plus(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), L
 }
 
 fn lex_minus(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
+    consume_byte(input, line, start, b'-')
+        .map(|(_, end)| (Token::minus(Loc::new(line, start, end)), end))
 }
 
 fn lex_and(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
+    consume_byte(input, line, start, b'&')
+        .map(|(_, end)| (Token::and(Loc::new(line, start, end)), end))
 }
 
 fn lex_or(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
+    consume_byte(input, line, start, b'|')
+        .map(|(_, end)| (Token::or(Loc::new(line, start, end)), end))
 }
 
 fn lex_bang(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
+    consume_byte(input, line, start, b'!')
+        .map(|(_, end)| (Token::bang(Loc::new(line, start, end)), end))
 }
 
 fn lex_jgt(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
@@ -201,13 +209,17 @@ fn lex_kbd(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), Le
 
 #[test]
 fn test_lex() {
-    let input = "@+";
+    let input = "@+-&|!";
     let res = lex(input, 0);
     assert!(res.is_ok());
     let tokens = res.ok().unwrap();
     let expect = vec![
         Token::at_sign(Loc::new(0, 0, 1)),
         Token::plus(Loc::new(0, 1, 2)),
+        Token::minus(Loc::new(0, 2, 3)),
+        Token::and(Loc::new(0, 3, 4)),
+        Token::or(Loc::new(0, 4, 5)),
+        Token::bang(Loc::new(0, 5, 6)),
     ];
     assert_eq!(tokens.len(), expect.len());
     for (i, tok) in tokens.into_iter().enumerate() {
