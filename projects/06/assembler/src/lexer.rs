@@ -6,6 +6,45 @@ use crate::token::*;
 use std::collections::HashMap;
 
 fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
+    let keywords = [
+        ("A", TokenKind::A),
+        ("M", TokenKind::M),
+        ("D", TokenKind::D),
+        ("AM", TokenKind::AM),
+        ("AD", TokenKind::AD),
+        ("AMD", TokenKind::AMD),
+        ("JGT", TokenKind::JGT),
+        ("JEQ", TokenKind::JEQ),
+        ("JGE", TokenKind::JGE),
+        ("JLT", TokenKind::JLT),
+        ("JNE", TokenKind::JNE),
+        ("JLE", TokenKind::JLE),
+        ("JMP", TokenKind::JMP),
+        ("SP", TokenKind::SP),
+        ("LCL", TokenKind::LCL),
+        ("ARG", TokenKind::ARG),
+        ("THIS", TokenKind::THIS),
+        ("THAT", TokenKind::THAT),
+        ("R0", TokenKind::R0),
+        ("R1", TokenKind::R1),
+        ("R2", TokenKind::R2),
+        ("R3", TokenKind::R3),
+        ("R4", TokenKind::R4),
+        ("R5", TokenKind::R5),
+        ("R6", TokenKind::R6),
+        ("R7", TokenKind::R7),
+        ("R8", TokenKind::R8),
+        ("R9", TokenKind::R9),
+        ("R10", TokenKind::R10),
+        ("R11", TokenKind::R11),
+        ("R12", TokenKind::R12),
+        ("R13", TokenKind::R13),
+        ("R14", TokenKind::R14),
+        ("R15", TokenKind::R15),
+        ("SCREEN", TokenKind::SCREEN),
+        ("KBD", TokenKind::KBD),
+    ];
+
     // 解析結果を保存するベクター
     let mut tokens = Vec::new();
     //　入力

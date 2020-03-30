@@ -3,11 +3,11 @@
 use crate::loc::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum TokenKind {
+pub enum TokenKind<'a> {
     // A命令のトークン
-    AtSign,         // "@"
-    Number(usize),  // "1234"
-    Symbol(String), // "SUM"
+    AtSign,          // "@"
+    Number(usize),   // "1234"
+    Symbol(&'a str), // "SUM"
 
     // C命令のトークン
     // comp部分のトークン
@@ -15,19 +15,19 @@ pub enum TokenKind {
     A, // "A"
     M, // "M"
     D, // "D"
+    // dest部分のトークン
+    AM,
+    AD,
+    MD,
+    AMD,
 
     // 演算子
+    Equal, // =
     Plus,  // "+"
     Minus, // "-"
     And,   // "&"
     Or,    // "|"
     Bang,  // "!"
-
-    // dest部分のトークン
-    MD,
-    AM,
-    AD,
-    AMD,
 
     // jump部分のトークン
     JGT,
@@ -38,15 +38,40 @@ pub enum TokenKind {
     JLE,
     JMP,
 
-    Semicoron, // ";"
+    Semicolon, // ";"
 
     LParen, // "("
     RParen, // ")"
+
+    /// 定義済みシンボル
+    SP,
+    LCL,
+    ARG,
+    THIS,
+    THAT,
+    R0,
+    R1,
+    R2,
+    R3,
+    R4,
+    R5,
+    R6,
+    R7,
+    R8,
+    R9,
+    R10,
+    R11,
+    R12,
+    R13,
+    R14,
+    R15,
+    SCREEN,
+    KBD,
 }
 
-pub type Token = Annot<TokenKind>;
+pub type Token<'a> = Annot<TokenKind<'a>>;
 
-impl Token {
+impl<'a> Token<'a> {
     pub fn at_sign(loc: Loc) -> Self {
         Self::new(TokenKind::AtSign, loc)
     }
@@ -55,36 +80,12 @@ impl Token {
         Self::new(TokenKind::Number(n), loc)
     }
 
-    pub fn symbol(s: String, loc: Loc) -> Self {
+    pub fn symbol(s: &'a str, loc: Loc) -> Self {
         Self::new(TokenKind::Symbol(s), loc)
     }
 
-    pub fn a(loc: Loc) -> Self {
-        Self::new(TokenKind::A, loc)
-    }
-
-    pub fn d(loc: Loc) -> Self {
-        Self::new(TokenKind::D, loc)
-    }
-
-    pub fn m(loc: Loc) -> Self {
-        Self::new(TokenKind::M, loc)
-    }
-
-    pub fn ad(loc: Loc) -> Self {
-        Self::new(TokenKind::AD, loc)
-    }
-
-    pub fn am(loc: Loc) -> Self {
-        Self::new(TokenKind::AM, loc)
-    }
-
-    pub fn md(loc: Loc) -> Self {
-        Self::new(TokenKind::MD, loc)
-    }
-
-    pub fn amd(loc: Loc) -> Self {
-        Self::new(TokenKind::AMD, loc)
+    pub fn equal(loc: Loc) -> Self {
+        Self::new(TokenKind::Equal, loc)
     }
 
     pub fn plus(loc: Loc) -> Self {
@@ -107,43 +108,19 @@ impl Token {
         Self::new(TokenKind::Bang, loc)
     }
 
-    pub fn jgt(loc: Loc) -> Self {
-        Self::new(TokenKind::JGT, loc)
-    }
-
-    pub fn jeq(loc: Loc) -> Self {
-        Self::new(TokenKind::JEQ, loc)
-    }
-
-    pub fn jge(loc: Loc) -> Self {
-        Self::new(TokenKind::JGE, loc)
-    }
-
-    pub fn jlt(loc: Loc) -> Self {
-        Self::new(TokenKind::JLT, loc)
-    }
-
-    pub fn jne(loc: Loc) -> Self {
-        Self::new(TokenKind::JNE, loc)
-    }
-
-    pub fn jle(loc: Loc) -> Self {
-        Self::new(TokenKind::JLE, loc)
-    }
-
-    pub fn jmp(loc: Loc) -> Self {
-        Self::new(TokenKind::JMP, loc)
-    }
-
-    pub fn semicoron(loc: Loc) -> Self {
-        Self::new(TokenKind::Semicoron, loc)
+    pub fn semicolon(loc: Loc) -> Self {
+        Self::new(TokenKind::Semicolon, loc)
     }
 
     pub fn lparen(loc: Loc) -> Self {
         Self::new(TokenKind::LParen, loc)
     }
 
-    pub fn rpare(loc: Loc) -> Self {
+    pub fn rparen(loc: Loc) -> Self {
         Self::new(TokenKind::RParen, loc)
+    }
+
+    pub fn to_token(kind: TokenKind<'a>, loc: Loc) -> Self {
+        Self::new(kind, loc)
     }
 }
