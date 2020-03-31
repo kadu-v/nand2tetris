@@ -85,6 +85,13 @@ impl<'a> Token<'a> {
         Self::new(TokenKind::Symbol(s), loc)
     }
 
+    pub fn get_symbol(&self) -> Option<&'a str> {
+        match self.get_value() {
+            &TokenKind::Symbol(s) => Some(s),
+            _ => None,
+        }
+    }
+
     pub fn equal(loc: Loc) -> Self {
         Self::new(TokenKind::Equal, loc)
     }
