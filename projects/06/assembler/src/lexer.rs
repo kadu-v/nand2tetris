@@ -5,7 +5,7 @@ use crate::loc::*;
 use crate::token::*;
 use std::collections::HashMap;
 
-fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
+pub fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
     let keywords = [
         ("A", TokenKind::A),
         ("M", TokenKind::M),
@@ -79,7 +79,9 @@ fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
             b'(' => lex_a_token!(lex_lparen(input, line, pos)),
             b')' => lex_a_token!(lex_rparen(input, line, pos)),
             b'0'..=b'9' => lex_a_token!(lex_number(input, line, pos)),
-            b'a'..=b'z' | b'A'..=b'Z' | b'.' | b'_' => lex_a_token!(lex_symbol(input, line, pos)),
+            b'a'..=b'z' | b'A'..=b'Z' | b'.' | b'_' | b'$' => {
+                lex_a_token!(lex_symbol(input, line, pos))
+            }
             b' ' | b'\n' | b'\t' => {
                 let ((), p) = skip_whitespaces(input, pos)?;
                 pos = p;
@@ -166,11 +168,15 @@ fn lex_symbol(input: &[u8], line: usize, start: usize) -> Result<(Token, usize),
     use std::str::from_utf8;
     let end = recoginize_many(input, start, |b| {
         let c = b as char;
-        (c.is_alphabetic() || c.is_digit(10)) && !b"^[]\\`".contains(&b)
+        c.is_alphabetic() || c.is_digit(10) || b"_.$".contains(&b)
     });
-
-    let s = from_utf8(&input[start..end]).unwrap();
-    Ok((Token::symbol(s, Loc::new(line, start, end)), end))
+    match from_utf8(&input[start..end]) {
+        Ok(s) => Ok((Token::symbol(s, Loc::new(line, start, end)), end)),
+        _ => Err(LexError::invalid_char(
+            input[end] as char,
+            Loc::new(line, start, end),
+        )),
+    }
 }
 
 fn lex_equal(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
@@ -234,7 +240,7 @@ fn lex_kbd(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), Le
 
 #[test]
 fn test_lex() {
-    let input = "@+-&|! @ ;()= 1234 SUM i Loop";
+    let input = "@+-&|! @ ;()= 1234 SUM i Loop __register__ _x. $y A";
     let res = lex(input, 0);
     //assert_eq!(res, Err(LexError::eof(Loc::new(0, 1, 2))));
     let tokens = res.ok().unwrap();
@@ -254,6 +260,10 @@ fn test_lex() {
         Token::symbol("SUM", Loc::new(0, 19, 22)),
         Token::symbol("i", Loc::new(0, 23, 24)),
         Token::symbol("Loop", Loc::new(0, 25, 29)),
+        Token::symbol("__register__", Loc::new(0, 30, 42)),
+        Token::symbol("_x.", Loc::new(0, 43, 46)),
+        Token::symbol("$y", Loc::new(0, 47, 49)),
+        Token::to_token(TokenKind::A, Loc::new(0, 30, 31)),
     ];
     assert_eq!(tokens.len(), expect.len());
     for (i, tok) in tokens.into_iter().enumerate() {
