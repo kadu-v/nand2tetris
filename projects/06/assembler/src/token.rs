@@ -1,5 +1,6 @@
 //! Token for Hack assembler
 
+use crate::annot::*;
 use crate::loc::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

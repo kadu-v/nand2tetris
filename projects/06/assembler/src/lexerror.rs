@@ -1,5 +1,7 @@
-use crate::loc::{Annot, Loc};
+use crate::annot::Annot;
+use crate::loc::Loc;
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum LexErrorKind {
     InvalidChar(char),
     Eof,
