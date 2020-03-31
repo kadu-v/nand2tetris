@@ -130,18 +130,6 @@ fn recoginize_many(input: &[u8], mut pos: usize, f: impl Fn(u8) -> bool) -> usiz
     pos
 }
 
-fn lookup_symbol<'a>(
-    symbol: &'a str,
-    loc: Loc,
-    keywords: &HashMap<&str, TokenKind<'a>>,
-) -> Token<'a> {
-    if let Some(kind) = keywords.get(symbol) {
-        return Token::to_token(kind.clone(), loc);
-    } else {
-        return Token::symbol(symbol, loc);
-    }
-}
-
 fn peek_char(input: &[u8], pos: usize) -> Option<u8> {
     let nxt = pos + 1;
     if nxt >= input.len() {
