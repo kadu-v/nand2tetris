@@ -12,6 +12,7 @@ pub fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
         ("D", TokenKind::D),
         ("AM", TokenKind::AM),
         ("AD", TokenKind::AD),
+        ("MD", TokenKind::MD),
         ("AMD", TokenKind::AMD),
         ("JGT", TokenKind::JGT),
         ("JEQ", TokenKind::JEQ),
@@ -80,7 +81,7 @@ pub fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
             b')' => lex_a_token!(lex_rparen(input, line, pos)),
             b'0'..=b'9' => lex_a_token!(lex_number(input, line, pos)),
             b'a'..=b'z' | b'A'..=b'Z' | b'.' | b'_' | b'$' => {
-                lex_a_token!(lex_symbol(input, line, pos))
+                lex_a_token!(lex_symbol_or_keywords(input, line, pos, &keywords))
             }
             b' ' | b'\n' | b'\t' => {
                 let ((), p) = skip_whitespaces(input, pos)?;
@@ -179,6 +180,21 @@ fn lex_symbol(input: &[u8], line: usize, start: usize) -> Result<(Token, usize),
     }
 }
 
+// ここのライフタイムを完全には理解していない
+fn lex_symbol_or_keywords<'a>(
+    input: &'a [u8],
+    line: usize,
+    start: usize,
+    keywords: &HashMap<&str, TokenKind<'a>>,
+) -> Result<(Token<'a>, usize), LexError> {
+    let (tok, p) = lex_symbol(input, line, start)?;
+    let symbol = tok.get_symbol().unwrap();
+    match keywords.get(symbol) {
+        Some(kind) => Ok((Token::new(kind.clone(), Loc::new(line, start, p)), p)),
+        _ => Ok((tok, p)),
+    }
+}
+
 fn lex_equal(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
     consume_byte(input, line, start, b'=')
         .map(|(_, end)| (Token::equal(Loc::new(line, start, end)), end))
@@ -240,7 +256,13 @@ fn lex_kbd(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), Le
 
 #[test]
 fn test_lex() {
-    let input = "@+-&|! @ ;()= 1234 SUM i Loop __register__ _x. $y A";
+    let input = "@+-&|! @ ;()= 1234 SUM \
+                 i Loop __register__ _x. $y \
+                 A M D AM AD MD AMD \
+                 JGT JEQ JGE JLT JNE JLE JMP \
+                 SP LCL ARG THIS THAT \
+                 R0 R1 R2 R3 R4 R5 R6 R7 R8 R9 R10 R11 R12 R13 R14 R15 \
+                 SCREEN KBD";
     let res = lex(input, 0);
     //assert_eq!(res, Err(LexError::eof(Loc::new(0, 1, 2))));
     let tokens = res.ok().unwrap();
@@ -263,7 +285,43 @@ fn test_lex() {
         Token::symbol("__register__", Loc::new(0, 30, 42)),
         Token::symbol("_x.", Loc::new(0, 43, 46)),
         Token::symbol("$y", Loc::new(0, 47, 49)),
-        Token::to_token(TokenKind::A, Loc::new(0, 30, 31)),
+        Token::to_token(TokenKind::A, Loc::new(0, 50, 51)),
+        Token::to_token(TokenKind::M, Loc::new(0, 52, 53)),
+        Token::to_token(TokenKind::D, Loc::new(0, 54, 55)),
+        Token::to_token(TokenKind::AM, Loc::new(0, 56, 58)),
+        Token::to_token(TokenKind::AD, Loc::new(0, 59, 61)),
+        Token::to_token(TokenKind::MD, Loc::new(0, 62, 64)),
+        Token::to_token(TokenKind::AMD, Loc::new(0, 65, 68)),
+        Token::to_token(TokenKind::JGT, Loc::new(0, 69, 72)),
+        Token::to_token(TokenKind::JEQ, Loc::new(0, 73, 76)),
+        Token::to_token(TokenKind::JGE, Loc::new(0, 77, 80)),
+        Token::to_token(TokenKind::JLT, Loc::new(0, 81, 84)),
+        Token::to_token(TokenKind::JNE, Loc::new(0, 85, 88)),
+        Token::to_token(TokenKind::JLE, Loc::new(0, 89, 92)),
+        Token::to_token(TokenKind::JMP, Loc::new(0, 93, 96)),
+        Token::to_token(TokenKind::SP, Loc::new(0, 97, 99)),
+        Token::to_token(TokenKind::LCL, Loc::new(0, 100, 103)),
+        Token::to_token(TokenKind::ARG, Loc::new(0, 104, 107)),
+        Token::to_token(TokenKind::THIS, Loc::new(0, 108, 112)),
+        Token::to_token(TokenKind::THAT, Loc::new(0, 113, 117)),
+        Token::to_token(TokenKind::R0, Loc::new(0, 118, 120)),
+        Token::to_token(TokenKind::R1, Loc::new(0, 121, 123)),
+        Token::to_token(TokenKind::R2, Loc::new(0, 124, 126)),
+        Token::to_token(TokenKind::R3, Loc::new(0, 127, 129)),
+        Token::to_token(TokenKind::R4, Loc::new(0, 130, 132)),
+        Token::to_token(TokenKind::R5, Loc::new(0, 133, 135)),
+        Token::to_token(TokenKind::R6, Loc::new(0, 136, 138)),
+        Token::to_token(TokenKind::R7, Loc::new(0, 139, 141)),
+        Token::to_token(TokenKind::R8, Loc::new(0, 142, 144)),
+        Token::to_token(TokenKind::R9, Loc::new(0, 145, 147)),
+        Token::to_token(TokenKind::R10, Loc::new(0, 148, 151)),
+        Token::to_token(TokenKind::R11, Loc::new(0, 152, 155)),
+        Token::to_token(TokenKind::R12, Loc::new(0, 156, 159)),
+        Token::to_token(TokenKind::R13, Loc::new(0, 160, 163)),
+        Token::to_token(TokenKind::R14, Loc::new(0, 164, 167)),
+        Token::to_token(TokenKind::R15, Loc::new(0, 168, 171)),
+        Token::to_token(TokenKind::SCREEN, Loc::new(0, 172, 178)),
+        Token::to_token(TokenKind::KBD, Loc::new(0, 179, 182)),
     ];
     assert_eq!(tokens.len(), expect.len());
     for (i, tok) in tokens.into_iter().enumerate() {
