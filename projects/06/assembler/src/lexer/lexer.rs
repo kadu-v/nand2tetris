@@ -6,18 +6,21 @@ use crate::loc::*;
 use std::collections::HashMap;
 use std::io::BufRead;
 
-///
-pub fn lex_all(buf: &mut BufRead) -> Result<Vec<Vec<Token>>, LexError> {
+/// bufReadの中身の方が複数ある場合など，動的に決まるものに対応するためにdynにしている．
+/// 警告を消すためにつけているが，なくても実行可能．
+pub fn lex_all(buf: &mut dyn BufRead) -> Result<Vec<Vec<Token>>, LexError> {
     let mut tokens = Vec::new();
     let mut lines = buf.lines();
+    let mut count = 0;
     while let Some(line) = lines.next() {
         match line {
             Ok(s) => {
-                let toks = lex(&s, 0)?;
+                let toks = lex(&s, count)?;
                 tokens.push(toks);
             }
-            Err(_) => return Err(LexError::eof(Loc::new(0, 0, 0))), // エラーハンドリングがいまいち，もう少し考えるべき
+            Err(_) => return Err(LexError::eof(Loc::new(count, 0, 0))), // エラーハンドリングがいまいち，もう少し考えるべき
         }
+        count += 1;
     }
 
     return Ok(tokens);
