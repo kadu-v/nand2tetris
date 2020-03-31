@@ -1,7 +1,7 @@
 //! Lexer for Hack Assembler
 
-use crate::lex::lexerror::*;
-use crate::lex::token::*;
+use crate::lexer::lexerror::*;
+use crate::lexer::token::*;
 use crate::loc::*;
 use std::collections::HashMap;
 

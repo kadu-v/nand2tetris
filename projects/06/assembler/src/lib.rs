@@ -1,6 +1,6 @@
 pub mod annot;
 pub mod code;
-pub mod lex;
+pub mod lexer;
 pub mod loc;
 pub mod parser;
 pub mod symboltable;
