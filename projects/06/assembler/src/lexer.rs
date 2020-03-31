@@ -235,14 +235,6 @@ fn lex_rparen(input: &[u8], line: usize, start: usize) -> Result<(Token, usize),
         .map(|(_, end)| (Token::rparen(Loc::new(line, start, end)), end))
 }
 
-fn lex_screen(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
-fn lex_kbd(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
-    unimplemented!()
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///
 ///
