@@ -4,11 +4,11 @@ use crate::annot::*;
 use crate::loc::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum TokenKind<'a> {
+pub enum TokenKind {
     // A命令のトークン
-    AtSign,          // "@"
-    Number(usize),   // "1234"
-    Symbol(&'a str), // "SUM"
+    AtSign,         // "@"
+    Number(usize),  // "1234"
+    Symbol(String), // "SUM"
 
     // C命令のトークン
     // comp部分のトークン
@@ -70,9 +70,9 @@ pub enum TokenKind<'a> {
     KBD,
 }
 
-pub type Token<'a> = Annot<TokenKind<'a>>;
+pub type Token = Annot<TokenKind>;
 
-impl<'a> Token<'a> {
+impl Token {
     pub fn at_sign(loc: Loc) -> Self {
         Self::new(TokenKind::AtSign, loc)
     }
@@ -81,13 +81,13 @@ impl<'a> Token<'a> {
         Self::new(TokenKind::Number(n), loc)
     }
 
-    pub fn symbol(s: &'a str, loc: Loc) -> Self {
-        Self::new(TokenKind::Symbol(s), loc)
+    pub fn symbol(s: impl Into<String>, loc: Loc) -> Self {
+        Self::new(TokenKind::Symbol(s.into()), loc)
     }
 
-    pub fn get_symbol(&self) -> Option<&'a str> {
+    pub fn get_symbol(&self) -> Option<String> {
         match self.get_value() {
-            &TokenKind::Symbol(s) => Some(s),
+            TokenKind::Symbol(s) => Some(s.clone()),
             _ => None,
         }
     }
@@ -128,7 +128,7 @@ impl<'a> Token<'a> {
         Self::new(TokenKind::RParen, loc)
     }
 
-    pub fn to_token(kind: TokenKind<'a>, loc: Loc) -> Self {
+    pub fn to_token(kind: TokenKind, loc: Loc) -> Self {
         Self::new(kind, loc)
     }
 }

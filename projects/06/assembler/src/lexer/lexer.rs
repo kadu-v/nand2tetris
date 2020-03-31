@@ -4,7 +4,26 @@ use crate::lexer::lexerror::*;
 use crate::lexer::token::*;
 use crate::loc::*;
 use std::collections::HashMap;
+use std::io::BufRead;
 
+///
+pub fn lex_all(buf: &mut BufRead) -> Result<Vec<Vec<Token>>, LexError> {
+    let mut tokens = Vec::new();
+    let mut lines = buf.lines();
+    while let Some(line) = lines.next() {
+        match line {
+            Ok(s) => {
+                let toks = lex(&s, 0)?;
+                tokens.push(toks);
+            }
+            Err(_) => return Err(LexError::eof(Loc::new(0, 0, 0))), // エラーハンドリングがいまいち，もう少し考えるべき
+        }
+    }
+
+    return Ok(tokens);
+}
+
+/// 一行を字句解析するメソッド
 pub fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
     let keywords = [
         ("A", TokenKind::A),
@@ -176,15 +195,15 @@ fn lex_symbol(input: &[u8], line: usize, start: usize) -> Result<(Token, usize),
 }
 
 // ここのライフタイムを完全には理解していない
-fn lex_symbol_or_keywords<'a>(
-    input: &'a [u8],
+fn lex_symbol_or_keywords(
+    input: &[u8],
     line: usize,
     start: usize,
-    keywords: &HashMap<&str, TokenKind<'a>>,
-) -> Result<(Token<'a>, usize), LexError> {
+    keywords: &HashMap<&str, TokenKind>,
+) -> Result<(Token, usize), LexError> {
     let (tok, p) = lex_symbol(input, line, start)?;
     let symbol = tok.get_symbol().unwrap();
-    match keywords.get(symbol) {
+    match keywords.get::<str>(&symbol) {
         Some(kind) => Ok((Token::new(kind.clone(), Loc::new(line, start, p)), p)),
         _ => Ok((tok, p)),
     }
