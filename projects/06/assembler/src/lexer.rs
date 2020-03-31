@@ -83,6 +83,13 @@ pub fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
             b'a'..=b'z' | b'A'..=b'Z' | b'.' | b'_' | b'$' => {
                 lex_a_token!(lex_symbol_or_keywords(input, line, pos, &keywords))
             }
+            b'/' => {
+                if peek_char(input, pos).map_or(false, |c| c == b'/') {
+                    break;
+                } else {
+                    return Err(LexError::invalid_char('/', Loc::new(line, pos, pos + 1)));
+                }
+            }
             b' ' | b'\n' | b'\t' => {
                 let ((), p) = skip_whitespaces(input, pos)?;
                 pos = p;
@@ -250,7 +257,7 @@ fn test_lex() {
                  JGT JEQ JGE JLT JNE JLE JMP \
                  SP LCL ARG THIS THAT \
                  R0 R1 R2 R3 R4 R5 R6 R7 R8 R9 R10 R11 R12 R13 R14 R15 \
-                 SCREEN KBD";
+                 SCREEN KBD // this is a comment, so it must be ignored.";
     let res = lex(input, 0);
     //assert_eq!(res, Err(LexError::eof(Loc::new(0, 1, 2))));
     let tokens = res.ok().unwrap();
