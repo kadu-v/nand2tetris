@@ -1,8 +1,8 @@
 //! Lexer for Hack Assembler
 
-use crate::lexerror::*;
+use crate::lex::lexerror::*;
+use crate::lex::token::*;
 use crate::loc::*;
-use crate::token::*;
 use std::collections::HashMap;
 
 pub fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
