@@ -2,13 +2,13 @@
 use crate::lexer::token::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum ParseError {
+pub enum ParseError {
     // 予期せぬトークンがきている
-    UnexpactedToken(Token),
+    UnexpectedToken(Token),
     // オペレータでないものがきている
     NotOperator(Token),
     // カッコが閉じられていない．
     UnclosedOpenParen(Token),
     // 解析が終わったのに，トークンが残っている．
-    RedundantCommand(Token),
+    RedundantToken(Token),
 }
