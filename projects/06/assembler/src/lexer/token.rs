@@ -86,7 +86,7 @@ impl Token {
     }
 
     pub fn get_symbol(&self) -> Option<String> {
-        match self.get_value() {
+        match self.value() {
             TokenKind::Symbol(s) => Some(s.clone()),
             _ => None,
         }

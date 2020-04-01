@@ -12,7 +12,7 @@ impl<T> Annot<T> {
         Self { value, loc }
     }
 
-    pub fn get_value(&self) -> &T {
+    pub fn value(&self) -> &T {
         &self.value
     }
 

@@ -12,7 +12,7 @@ pub fn parse(lines: &Vec<Vec<Token>>) -> Result<Vec<Command>, ParseError> {
     let mut commands = Vec::new();
     let mut ram_address = 0;
     for line in lines {
-        match line[0].get_value() {
+        match line[0].value() {
             TokenKind::AtSign => {
                 let cmd = parse_a(&mut ram_address, line, &mut symboltable)?;
                 commands.push(cmd);
@@ -39,7 +39,7 @@ fn parse_a(
     } else if tokens.len() >= 3 {
         return Err(ParseError::RedundantToken(tokens[2].clone()));
     }
-    match tokens[1].get_value() {
+    match tokens[1].value() {
         TokenKind::R0 | TokenKind::SP => set_command!(0x0000),
         TokenKind::R1 | TokenKind::LCL => set_command!(0x0001),
         TokenKind::R2 | TokenKind::ARG => set_command!(0x0002),

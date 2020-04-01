@@ -32,7 +32,7 @@ impl<'a> SymbolTable<'a> {
                 address += 1;
                 continue;
             }
-            match (line[0].get_value(), line[1].get_value()) {
+            match (line[0].value(), line[1].value()) {
                 (TokenKind::LParen, TokenKind::Symbol(s)) => {
                     table.add_entry(s, address);
                 }
