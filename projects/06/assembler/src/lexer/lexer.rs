@@ -6,27 +6,31 @@ use crate::loc::*;
 use std::collections::HashMap;
 use std::io::BufRead;
 
+// ファイルの中身全体を字句解析するメソッド
 /// bufReadの中身の方が複数ある場合など，動的に決まるものに対応するためにdynにしている．
 /// 警告を消すためにつけているが，なくても実行可能．
 pub fn lex_all(buf: &mut dyn BufRead) -> Result<Vec<Vec<Token>>, LexError> {
     let mut tokens = Vec::new();
-    let mut lines = buf.lines();
-    let mut count = 0;
+    let mut lines = buf.lines().enumerate();
     while let Some(line) = lines.next() {
+        let (i, line) = line;
         match line {
             Ok(s) => {
-                let toks = lex(&s, count)?;
-                tokens.push(toks);
+                let toks = lex(&s, i)?;
+                if !toks.is_empty() {
+                    tokens.push(toks);
+                }
             }
-            Err(_) => return Err(LexError::eof(Loc::new(count, 0, 0))), // エラーハンドリングがいまいち，もう少し考えるべき
+            Err(_) => return Err(LexError::eof(Loc::new(i, 0, 0))), // エラーハンドリングがいまいち，もう少し考えるべき
         }
-        count += 1;
     }
 
     return Ok(tokens);
 }
 
 /// 一行を字句解析するメソッド
+/// keywords テーブルを関数呼び出しのたびにメモリを確保するので，コストがかかる
+/// lex_allのなかで定義して引数で渡すべき？
 pub fn lex(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
     let keywords = [
         ("A", TokenKind::A),
@@ -198,12 +202,12 @@ fn lex_symbol(input: &[u8], line: usize, start: usize) -> Result<(Token, usize),
 }
 
 // ここのライフタイムを完全には理解していない
-fn lex_symbol_or_keywords(
-    input: &[u8],
+fn lex_symbol_or_keywords<'a, 'b: 'a>(
+    input: &'a [u8],
     line: usize,
     start: usize,
-    keywords: &HashMap<&str, TokenKind>,
-) -> Result<(Token, usize), LexError> {
+    keywords: &HashMap<&'b str, TokenKind<'b>>,
+) -> Result<(Token<'a>, usize), LexError> {
     let (tok, p) = lex_symbol(input, line, start)?;
     let symbol = tok.get_symbol().unwrap();
     match keywords.get::<str>(&symbol) {
