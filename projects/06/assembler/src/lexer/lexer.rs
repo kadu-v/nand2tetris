@@ -10,17 +10,18 @@ use std::io::BufRead;
 /// 警告を消すためにつけているが，なくても実行可能．
 pub fn lex_all(buf: &mut dyn BufRead) -> Result<Vec<Vec<Token>>, LexError> {
     let mut tokens = Vec::new();
-    let mut lines = buf.lines();
-    let mut count = 0;
+    let mut lines = buf.lines().enumerate();
     while let Some(line) = lines.next() {
+        let (i, line) = line;
         match line {
             Ok(s) => {
-                let toks = lex(&s, count)?;
-                tokens.push(toks);
+                let toks = lex(&s, i)?;
+                if !toks.is_empty() {
+                    tokens.push(toks);
+                }
             }
-            Err(_) => return Err(LexError::eof(Loc::new(count, 0, 0))), // エラーハンドリングがいまいち，もう少し考えるべき
+            Err(_) => return Err(LexError::eof(Loc::new(i, 0, 0))), // エラーハンドリングがいまいち，もう少し考えるべき
         }
-        count += 1;
     }
 
     return Ok(tokens);
