@@ -128,6 +128,34 @@ impl Token {
         Self::new(TokenKind::RParen, loc)
     }
 
+    pub fn jgt(loc: Loc) -> Self {
+        Self::new(TokenKind::JGT, loc)
+    }
+
+    pub fn jeq(loc: Loc) -> Self {
+        Self::new(TokenKind::JEQ, loc)
+    }
+
+    pub fn jge(loc: Loc) -> Self {
+        Self::new(TokenKind::JGE, loc)
+    }
+
+    pub fn jlt(loc: Loc) -> Self {
+        Self::new(TokenKind::JLT, loc)
+    }
+
+    pub fn jne(loc: Loc) -> Self {
+        Self::new(TokenKind::JNE, loc)
+    }
+
+    pub fn jle(loc: Loc) -> Self {
+        Self::new(TokenKind::JLE, loc)
+    }
+
+    pub fn jmp(loc: Loc) -> Self {
+        Self::new(TokenKind::JMP, loc)
+    }
+
     pub fn to_token(kind: TokenKind, loc: Loc) -> Self {
         Self::new(kind, loc)
     }
