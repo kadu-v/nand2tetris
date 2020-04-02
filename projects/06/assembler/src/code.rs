@@ -4,6 +4,32 @@ use crate::loc::*;
 use crate::parser::command::*;
 use crate::parser::parseerror::*;
 
+//
+pub fn value(token: &Token) -> Option<u16> {
+    match token.value() {
+        TokenKind::R0 | TokenKind::SP => Some(0x0000),
+        TokenKind::R1 | TokenKind::LCL => Some(0x0001),
+        TokenKind::R2 | TokenKind::ARG => Some(0x0002),
+        TokenKind::R3 | TokenKind::THIS => Some(0x0003),
+        TokenKind::R4 | TokenKind::THAT => Some(0x0004),
+        TokenKind::R5 => Some(0x0005),
+        TokenKind::R6 => Some(0x0006),
+        TokenKind::R7 => Some(0x0007),
+        TokenKind::R8 => Some(0x0008),
+        TokenKind::R9 => Some(0x0009),
+        TokenKind::R10 => Some(0x000a),
+        TokenKind::R11 => Some(0x000b),
+        TokenKind::R12 => Some(0x000c),
+        TokenKind::R13 => Some(0x000d),
+        TokenKind::R14 => Some(0x000e),
+        TokenKind::R15 => Some(0x000f),
+        TokenKind::SCREEN => Some(0x4000),
+        TokenKind::KBD => Some(0x6000),
+        TokenKind::Number(n) => Some(*n),
+        _ => None,
+    }
+}
+
 /// comp to binary
 pub fn comp(token1: &Option<Token>, token2: &Option<Token>, token3: &Option<Token>) -> Option<u16> {
     match (token1, token2, token3) {
@@ -51,25 +77,13 @@ pub fn comp(token1: &Option<Token>, token2: &Option<Token>, token3: &Option<Toke
 /// dest
 pub fn dest(token: &Token) -> Option<u16> {
     match token.value() {
-        TokenKind::R0 | TokenKind::SP => Some(0x0000),
-        TokenKind::R1 | TokenKind::LCL => Some(0x0001),
-        TokenKind::R2 | TokenKind::ARG => Some(0x0002),
-        TokenKind::R3 | TokenKind::THIS => Some(0x0003),
-        TokenKind::R4 | TokenKind::THAT => Some(0x0004),
-        TokenKind::R5 => Some(0x0005),
-        TokenKind::R6 => Some(0x0006),
-        TokenKind::R7 => Some(0x0007),
-        TokenKind::R8 => Some(0x0008),
-        TokenKind::R9 => Some(0x0009),
-        TokenKind::R10 => Some(0x000a),
-        TokenKind::R11 => Some(0x000b),
-        TokenKind::R12 => Some(0x000c),
-        TokenKind::R13 => Some(0x000d),
-        TokenKind::R14 => Some(0x000e),
-        TokenKind::R15 => Some(0x000f),
-        TokenKind::SCREEN => Some(0x4000),
-        TokenKind::KBD => Some(0x6000),
-        TokenKind::Number(n) => Some(*n as u16),
+        TokenKind::M => Some(0b001),
+        TokenKind::D => Some(0b010),
+        TokenKind::MD => Some(0b011),
+        TokenKind::A => Some(0b100),
+        TokenKind::AM => Some(0b101),
+        TokenKind::AD => Some(0b110),
+        TokenKind::AMD => Some(0b111),
         _ => None,
     }
 }
@@ -230,7 +244,7 @@ fn test_comp() {
 }
 
 #[test]
-fn test_dest() {
+fn test_value() {
     let tokens = [
         TokenKind::R0,
         TokenKind::R1,
@@ -286,7 +300,7 @@ fn test_dest() {
 
     for (i, kind) in tokens.into_iter().enumerate() {
         let tok = Token::to_token(kind.clone(), Loc::new(0, 0, 0));
-        assert_eq!(expect[i], dest(&tok));
+        assert_eq!(expect[i], value(&tok));
     }
 }
 

@@ -5,22 +5,22 @@ use std::collections::HashMap;
 
 /// シンボルテーブルを表す構造体
 #[derive(Debug, PartialEq, Eq)]
-pub struct SymbolTable<'a> {
-    table: HashMap<&'a str, u16>,
+pub struct SymbolTable {
+    table: HashMap<String, u16>,
 }
 
-impl<'a> SymbolTable<'a> {
-    pub fn new() -> SymbolTable<'a> {
+impl SymbolTable {
+    pub fn new() -> SymbolTable {
         SymbolTable {
             table: HashMap::new(),
         }
     }
 
-    pub fn add_entry(&mut self, symbol: &'a str, address: u16) {
+    pub fn add_entry(&mut self, symbol: String, address: u16) {
         self.table.entry(symbol).or_insert(address);
     }
 
-    pub fn get_address(&self, symbol: &'a str) -> Option<&u16> {
+    pub fn get_address(&self, symbol: &String) -> Option<&u16> {
         self.table.get(symbol)
     }
 
@@ -34,7 +34,7 @@ impl<'a> SymbolTable<'a> {
             }
             match (line[0].value(), line[1].value()) {
                 (TokenKind::LParen, TokenKind::Symbol(s)) => {
-                    table.add_entry(s, address);
+                    table.add_entry(s.clone(), address); //Stringをclone()してる
                 }
                 _ => {
                     address += 1;
@@ -93,7 +93,8 @@ fn test_symbol_table() {
 
     let tokens = lex_all(&mut input).unwrap();
     let table = SymbolTable::make(&tokens);
-    for (key, value) in expect.iter() {
-        assert_eq!(value, table.get_address(key).unwrap());
+    for (key, value) in expect.into_iter() {
+        let key = key.clone().to_string();
+        assert_eq!(value, table.get_address(&key).unwrap());
     }
 }

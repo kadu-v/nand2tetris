@@ -3,7 +3,7 @@ use crate::annot::*;
 use crate::loc::*;
 use std::fmt;
 
-#[derive(PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum CommandKind {
     A(u16),
     // C命令 comp, dest, jump

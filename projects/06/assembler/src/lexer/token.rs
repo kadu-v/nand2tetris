@@ -7,7 +7,7 @@ use crate::loc::*;
 pub enum TokenKind {
     // A命令のトークン
     AtSign,         // "@"
-    Number(usize),  // "1234"
+    Number(u16),    // "1234"
     Symbol(String), // "SUM"
 
     // C命令のトークン
@@ -77,7 +77,7 @@ impl Token {
         Self::new(TokenKind::AtSign, loc)
     }
 
-    pub fn number(n: usize, loc: Loc) -> Self {
+    pub fn number(n: u16, loc: Loc) -> Self {
         Self::new(TokenKind::Number(n), loc)
     }
 
