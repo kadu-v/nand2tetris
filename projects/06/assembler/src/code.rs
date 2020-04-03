@@ -1,12 +1,9 @@
 //! Code
 use crate::lexer::token::*;
-use crate::loc::*;
-use crate::parser::command::*;
-use crate::parser::parseerror::*;
 
 //
-pub fn value(token: &Token) -> Option<u16> {
-    match token.value() {
+pub fn value(token: &TokenKind) -> Option<u16> {
+    match token {
         TokenKind::R0 | TokenKind::SP => Some(0x0000),
         TokenKind::R1 | TokenKind::LCL => Some(0x0001),
         TokenKind::R2 | TokenKind::ARG => Some(0x0002),
@@ -31,9 +28,13 @@ pub fn value(token: &Token) -> Option<u16> {
 }
 
 /// comp to binary
-pub fn comp(token1: &Option<Token>, token2: &Option<Token>, token3: &Option<Token>) -> Option<u16> {
+pub fn comp(
+    token1: Option<&TokenKind>,
+    token2: Option<&TokenKind>,
+    token3: Option<&TokenKind>,
+) -> Option<u16> {
     match (token1, token2, token3) {
-        (Some(tok), None, None) => match tok.value() {
+        (Some(tok), None, None) => match tok {
             TokenKind::Number(0) => Some(0b0101010),
             TokenKind::Number(1) => Some(0b0111111),
             TokenKind::D => Some(0b0001100),
@@ -41,7 +42,7 @@ pub fn comp(token1: &Option<Token>, token2: &Option<Token>, token3: &Option<Toke
             TokenKind::M => Some(0b1110000),
             _ => None,
         },
-        (Some(tok1), Some(tok2), None) => match (tok1.value(), tok2.value()) {
+        (Some(tok1), Some(tok2), None) => match (tok1, tok2) {
             (TokenKind::Minus, TokenKind::Number(1)) => Some(0b0111010),
             (TokenKind::Bang, TokenKind::D) => Some(0b0001101),
             (TokenKind::Bang, TokenKind::A) => Some(0b0110001),
@@ -51,7 +52,7 @@ pub fn comp(token1: &Option<Token>, token2: &Option<Token>, token3: &Option<Toke
             (TokenKind::Minus, TokenKind::M) => Some(0b1110011),
             _ => None,
         },
-        (Some(tok1), Some(tok2), Some(tok3)) => match (tok1.value(), tok2.value(), tok3.value()) {
+        (Some(tok1), Some(tok2), Some(tok3)) => match (tok1, tok2, tok3) {
             (TokenKind::D, TokenKind::Plus, TokenKind::Number(1)) => Some(0b0011111),
             (TokenKind::A, TokenKind::Plus, TokenKind::Number(1)) => Some(0b0110111),
             (TokenKind::D, TokenKind::Minus, TokenKind::Number(1)) => Some(0b0001110),
@@ -75,8 +76,8 @@ pub fn comp(token1: &Option<Token>, token2: &Option<Token>, token3: &Option<Toke
 }
 
 /// dest
-pub fn dest(token: &Token) -> Option<u16> {
-    match token.value() {
+pub fn dest(token: &TokenKind) -> Option<u16> {
+    match token {
         TokenKind::M => Some(0b001),
         TokenKind::D => Some(0b010),
         TokenKind::MD => Some(0b011),
@@ -89,8 +90,9 @@ pub fn dest(token: &Token) -> Option<u16> {
 }
 
 // jump
-pub fn jump(token: &Token) -> Option<u16> {
-    match token.value() {
+pub fn jump(token: &TokenKind) -> Option<u16> {
+    match token {
+        TokenKind::Number(0) => Some(0b000),
         TokenKind::JGT => Some(0b001),
         TokenKind::JEQ => Some(0b010),
         TokenKind::JGE => Some(0b011),
@@ -110,82 +112,98 @@ pub fn jump(token: &Token) -> Option<u16> {
 #[test]
 fn test_comp() {
     let tokens = [
-        (Some(TokenKind::Number(0)), None, None),
-        (Some(TokenKind::Number(1)), None, None),
-        (Some(TokenKind::Minus), Some(TokenKind::Number(1)), None),
-        (Some(TokenKind::D), None, None),
-        (Some(TokenKind::A), None, None),
-        (Some(TokenKind::Bang), Some(TokenKind::D), None),
-        (Some(TokenKind::Bang), Some(TokenKind::A), None),
-        (Some(TokenKind::Minus), Some(TokenKind::D), None),
-        (Some(TokenKind::Minus), Some(TokenKind::A), None),
+        (Some(&TokenKind::Number(0)), None, None),
+        (Some(&TokenKind::Number(1)), None, None),
+        (Some(&TokenKind::Minus), Some(&TokenKind::Number(1)), None),
+        (Some(&TokenKind::D), None, None),
+        (Some(&TokenKind::A), None, None),
+        (Some(&TokenKind::Bang), Some(&TokenKind::D), None),
+        (Some(&TokenKind::Bang), Some(&TokenKind::A), None),
+        (Some(&TokenKind::Minus), Some(&TokenKind::D), None),
+        (Some(&TokenKind::Minus), Some(&TokenKind::A), None),
         (
-            Some(TokenKind::D),
-            Some(TokenKind::Plus),
-            Some(TokenKind::Number(1)),
+            Some(&TokenKind::D),
+            Some(&TokenKind::Plus),
+            Some(&TokenKind::Number(1)),
         ),
         (
-            Some(TokenKind::A),
-            Some(TokenKind::Plus),
-            Some(TokenKind::Number(1)),
+            Some(&TokenKind::A),
+            Some(&TokenKind::Plus),
+            Some(&TokenKind::Number(1)),
         ),
         (
-            Some(TokenKind::D),
-            Some(TokenKind::Minus),
-            Some(TokenKind::Number(1)),
+            Some(&TokenKind::D),
+            Some(&TokenKind::Minus),
+            Some(&TokenKind::Number(1)),
         ),
         (
-            Some(TokenKind::A),
-            Some(TokenKind::Minus),
-            Some(TokenKind::Number(1)),
+            Some(&TokenKind::A),
+            Some(&TokenKind::Minus),
+            Some(&TokenKind::Number(1)),
         ),
         (
-            Some(TokenKind::D),
-            Some(TokenKind::Plus),
-            Some(TokenKind::A),
+            Some(&TokenKind::D),
+            Some(&TokenKind::Plus),
+            Some(&TokenKind::A),
         ),
         (
-            Some(TokenKind::D),
-            Some(TokenKind::Minus),
-            Some(TokenKind::A),
+            Some(&TokenKind::D),
+            Some(&TokenKind::Minus),
+            Some(&TokenKind::A),
         ),
         (
-            Some(TokenKind::A),
-            Some(TokenKind::Minus),
-            Some(TokenKind::D),
-        ),
-        (Some(TokenKind::D), Some(TokenKind::And), Some(TokenKind::A)),
-        (Some(TokenKind::D), Some(TokenKind::Or), Some(TokenKind::A)),
-        (Some(TokenKind::M), None, None),
-        (Some(TokenKind::Bang), Some(TokenKind::M), None),
-        (Some(TokenKind::Minus), Some(TokenKind::M), None),
-        (
-            Some(TokenKind::M),
-            Some(TokenKind::Plus),
-            Some(TokenKind::Number(1)),
+            Some(&TokenKind::A),
+            Some(&TokenKind::Minus),
+            Some(&TokenKind::D),
         ),
         (
-            Some(TokenKind::M),
-            Some(TokenKind::Minus),
-            Some(TokenKind::Number(1)),
+            Some(&TokenKind::D),
+            Some(&TokenKind::And),
+            Some(&TokenKind::A),
         ),
         (
-            Some(TokenKind::D),
-            Some(TokenKind::Plus),
-            Some(TokenKind::M),
+            Some(&TokenKind::D),
+            Some(&TokenKind::Or),
+            Some(&TokenKind::A),
+        ),
+        (Some(&TokenKind::M), None, None),
+        (Some(&TokenKind::Bang), Some(&TokenKind::M), None),
+        (Some(&TokenKind::Minus), Some(&TokenKind::M), None),
+        (
+            Some(&TokenKind::M),
+            Some(&TokenKind::Plus),
+            Some(&TokenKind::Number(1)),
         ),
         (
-            Some(TokenKind::D),
-            Some(TokenKind::Minus),
-            Some(TokenKind::M),
+            Some(&TokenKind::M),
+            Some(&TokenKind::Minus),
+            Some(&TokenKind::Number(1)),
         ),
         (
-            Some(TokenKind::M),
-            Some(TokenKind::Minus),
-            Some(TokenKind::D),
+            Some(&TokenKind::D),
+            Some(&TokenKind::Plus),
+            Some(&TokenKind::M),
         ),
-        (Some(TokenKind::D), Some(TokenKind::And), Some(TokenKind::M)),
-        (Some(TokenKind::D), Some(TokenKind::Or), Some(TokenKind::M)),
+        (
+            Some(&TokenKind::D),
+            Some(&TokenKind::Minus),
+            Some(&TokenKind::M),
+        ),
+        (
+            Some(&TokenKind::M),
+            Some(&TokenKind::Minus),
+            Some(&TokenKind::D),
+        ),
+        (
+            Some(&TokenKind::D),
+            Some(&TokenKind::And),
+            Some(&TokenKind::M),
+        ),
+        (
+            Some(&TokenKind::D),
+            Some(&TokenKind::Or),
+            Some(&TokenKind::M),
+        ),
     ];
 
     let expect: [Option<u16>; 28] = [
@@ -221,16 +239,7 @@ fn test_comp() {
 
     for (i, token) in tokens.into_iter().enumerate() {
         let (tok1, tok2, tok3) = token;
-        let tok1 = tok1
-            .clone()
-            .map(|tok| Token::to_token(tok, Loc::new(0, 0, 0)));
-        let tok2 = tok2
-            .clone()
-            .map(|tok| Token::to_token(tok, Loc::new(0, 0, 0)));
-        let tok3 = tok3
-            .clone()
-            .map(|tok| Token::to_token(tok, Loc::new(0, 0, 0)));
-        let result = comp(&tok1, &tok2, &tok3);
+        let result = comp(*tok1, *tok2, *tok3);
         assert!(
             result == expect[i],
             "tok1: {:?}, tok2: {:?}, tok3: {:?}, expect: {:07b}, result: {:07b}",
@@ -299,21 +308,20 @@ fn test_value() {
     use crate::lexer::token::*;
 
     for (i, kind) in tokens.into_iter().enumerate() {
-        let tok = Token::to_token(kind.clone(), Loc::new(0, 0, 0));
-        assert_eq!(expect[i], value(&tok));
+        assert_eq!(expect[i], value(&kind));
     }
 }
 
 #[test]
 fn test_jump() {
     let tokens = [
-        Token::jgt(Loc::new(0, 0, 0)),
-        Token::jeq(Loc::new(0, 0, 0)),
-        Token::jge(Loc::new(0, 0, 0)),
-        Token::jlt(Loc::new(0, 0, 0)),
-        Token::jne(Loc::new(0, 0, 0)),
-        Token::jle(Loc::new(0, 0, 0)),
-        Token::jmp(Loc::new(0, 0, 0)),
+        TokenKind::JGT,
+        TokenKind::JEQ,
+        TokenKind::JGE,
+        TokenKind::JLT,
+        TokenKind::JNE,
+        TokenKind::JLE,
+        TokenKind::JMP,
     ];
 
     let expect = [

@@ -25,7 +25,7 @@ impl Command {
 impl fmt::Debug for CommandKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            CommandKind::A(v) => write!(f, "{:015b}", v),
+            CommandKind::A(v) => write!(f, "A({:015b})", v),
             CommandKind::C(comp, dest, jump) => write!(
                 f,
                 "C(comp: {:07b}, dest: {:03b}, jump: {:03b})",
