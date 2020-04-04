@@ -82,7 +82,8 @@ fn test_symbol_table() {
          M=D            
       (INFINITE_LOOP)
         @INFINITE_LOOP
-        0;JMP           
+        0;JMP
+        @counter     
         "
     .as_bytes();
     let expect = [

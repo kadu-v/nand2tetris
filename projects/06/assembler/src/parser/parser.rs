@@ -9,14 +9,17 @@ use crate::symboltable::*;
 pub fn parse(lines: &Vec<Vec<Token>>) -> Result<Vec<Command>, ParseError> {
     let mut symboltable = SymbolTable::make(&lines);
     let mut commands = Vec::new();
-    let mut ram_address = 0;
+    let mut ram_address = 0x0010;
+
+    macro_rules! parse_a_line {
+        ($parser:expr) => {{
+            let cmd = $parser?;
+            commands.push(cmd);
+        }};
+    }
     for line in lines {
         match line[0].value() {
-            TokenKind::AtSign => {
-                let (cmd, adr) = parse_a(ram_address, line, &mut symboltable)?;
-                ram_address = adr;
-                commands.push(cmd);
-            }
+            TokenKind::AtSign => parse_a_line!(parse_a(&mut ram_address, line, &mut symboltable)),
             TokenKind::A
             | TokenKind::M
             | TokenKind::D
@@ -25,11 +28,7 @@ pub fn parse(lines: &Vec<Vec<Token>>) -> Result<Vec<Command>, ParseError> {
             | TokenKind::MD
             | TokenKind::AMD
             | TokenKind::Number(0)
-            | TokenKind::Number(1) => {
-                let (cmd, adr) = parse_c(ram_address, line)?;
-                ram_address = adr;
-                commands.push(cmd);
-            }
+            | TokenKind::Number(1) => parse_a_line!(parse_c(line)),
             TokenKind::LParen => continue,
             _ => return Err(ParseError::UnexpectedToken(line[0].clone())),
         }
@@ -38,27 +37,28 @@ pub fn parse(lines: &Vec<Vec<Token>>) -> Result<Vec<Command>, ParseError> {
 }
 
 fn parse_a(
-    ram_address: u16,
+    ram_address: &mut u16,
     tokens: &Vec<Token>,
     symboltable: &mut SymbolTable,
-) -> Result<(Command, u16), ParseError> {
+) -> Result<Command, ParseError> {
     match tokens.len() {
         1 => return Err(ParseError::UnexpectedToken(tokens[0].clone())),
         2 => {
             match tokens[1].value() {
                 TokenKind::Symbol(s) => {
                     if let Some(&adr) = symboltable.get_address(s) {
-                        Ok((Command::a(adr, tokens[0].loc().clone()), ram_address))
+                        Ok(Command::a(adr, tokens[0].loc().clone()))
                     } else {
-                        symboltable.add_entry(s.clone(), ram_address); // clone()している
-                        Ok((
-                            Command::a(ram_address, tokens[0].loc().clone()), // clone()してる
-                            ram_address + 1,
-                        ))
+                        symboltable.add_entry(s.clone(), *ram_address); // clone()している
+                        let adr = *ram_address;
+                        *ram_address += 1;
+                        Ok(
+                            Command::a(adr, tokens[0].loc().clone()), // clone()してる
+                        )
                     }
                 }
                 tokkind => match value(tokkind) {
-                    Some(adr) => Ok((Command::a(adr, tokens[0].loc().clone()), ram_address)),
+                    Some(adr) => Ok(Command::a(adr, tokens[0].loc().clone())),
                     _ => Err(ParseError::UnexpectedToken(tokens[0].clone())),
                 },
             }
@@ -67,12 +67,12 @@ fn parse_a(
     }
 }
 
-fn parse_c(ram_address: u16, tokens: &Vec<Token>) -> Result<(Command, u16), ParseError> {
+fn parse_c(tokens: &Vec<Token>) -> Result<Command, ParseError> {
     macro_rules! cmd_asign {
         ($tok1:expr, $tok2:expr, $tok3:expr, $tok4:expr, $n:expr) => {{
             let loc = tokens[0].loc().merge(tokens[$n].loc());
             match (dest($tok1), comp($tok2, $tok3, $tok4)) {
-                (Some(dest), Some(comp)) => Ok((Command::c(comp, dest, 0, loc), ram_address + 1)),
+                (Some(dest), Some(comp)) => Ok(Command::c(comp, dest, 0, loc)),
                 (Some(_), None) => Err(ParseError::UnexpectedToken(tokens[$n].clone())),
                 _ => Err(ParseError::UnexpectedToken(tokens[0].clone())),
             }
@@ -83,7 +83,7 @@ fn parse_c(ram_address: u16, tokens: &Vec<Token>) -> Result<(Command, u16), Pars
         ($tok1:expr, $tok2:expr, $tok3:expr, $tok4:expr, $n: expr) => {{
             let loc = tokens[0].loc().merge(tokens[$n].loc());
             match (comp($tok1, $tok2, $tok3), jump($tok4)) {
-                (Some(comp), Some(jump)) => Ok((Command::c(comp, 0, jump, loc), ram_address + 1)),
+                (Some(comp), Some(jump)) => Ok(Command::c(comp, 0, jump, loc)),
                 (None, Some(_)) => Err(ParseError::UnexpectedToken(tokens[$n].clone())),
                 _ => Err(ParseError::UnexpectedToken(tokens[0].clone())),
             }
@@ -145,7 +145,7 @@ fn parse_c(ram_address: u16, tokens: &Vec<Token>) -> Result<(Command, u16), Pars
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-fn test_parser() {
+fn test_parser_max() {
     use crate::annot::*;
     use crate::lexer::lexer::*;
     use crate::loc::*;
@@ -196,7 +196,160 @@ fn test_parser() {
         let result = Annot::new(expect[i].clone(), Loc::new(0, 0, 0));
         assert!(
             result.value() == cmd.value(),
-            "\nresult: {:?},\n\
+            "\nexpect: {:?},\n\
+             cmd:    {:?}",
+            result,
+            cmd
+        )
+    }
+}
+
+#[test]
+fn test_parser_rect() {
+    use crate::annot::*;
+    use crate::lexer::lexer::*;
+    use crate::loc::*;
+    let mut input = "
+   @0
+   D=M
+   @INFINITE_LOOP
+   D;JLE 
+   @counter
+   M=D
+   @SCREEN
+   D=A
+   @address
+   M=D
+(LOOP)
+   @address
+   A=M
+   M=-1
+   @address
+   D=M
+   @32
+   D=D+A
+   @address
+   M=D
+   @counter
+   MD=M-1
+   @LOOP
+   D;JGT
+(INFINITE_LOOP)
+   @INFINITE_LOOP
+   0;JMP
+
+        "
+    .as_bytes();
+
+    let expect = [
+        CommandKind::A(0b000000000000000),
+        CommandKind::C(0b1110000, 0b010, 0b000),
+        CommandKind::A(0b000000000010111),
+        CommandKind::C(0b0001100, 0b000, 0b110),
+        CommandKind::A(0b000000000010000),
+        CommandKind::C(0b0001100, 0b001, 0b000),
+        CommandKind::A(0b100000000000000),
+        CommandKind::C(0b0110000, 0b010, 0b000),
+        CommandKind::A(0b000000000010001),
+        CommandKind::C(0b0001100, 0b001, 0b000),
+        CommandKind::A(0b000000000010001),
+        CommandKind::C(0b1110000, 0b100, 0b000),
+        CommandKind::C(0b0111010, 0b001, 0b000),
+        CommandKind::A(0b000000000010001),
+        CommandKind::C(0b1110000, 0b010, 0b000),
+        CommandKind::A(0b000000000100000),
+        CommandKind::C(0b0000010, 0b010, 0b000),
+        CommandKind::A(0b000000000010001),
+        CommandKind::C(0b0001100, 0b001, 0b000),
+        CommandKind::A(0b000000000010000),
+        CommandKind::C(0b1110010, 0b011, 0b000),
+        CommandKind::A(0b000000000001010),
+        CommandKind::C(0b0001100, 0b000, 0b001),
+        CommandKind::A(0b000000000010111),
+        CommandKind::C(0b0101010, 0b000, 0b111),
+    ];
+    let mut tokens = lex_all(&mut input).unwrap();
+    let cmds = parse(&mut tokens).unwrap();
+    for (i, cmd) in cmds.into_iter().enumerate() {
+        let result = Annot::new(expect[i].clone(), Loc::new(0, 0, 0));
+        assert!(
+            result.value() == cmd.value(),
+            "\nexpect: {:?},\n\
+             cmd:    {:?}",
+            result,
+            cmd
+        )
+    }
+}
+
+#[test]
+fn test_parser_rectl() {
+    use crate::annot::*;
+    use crate::lexer::lexer::*;
+    use crate::loc::*;
+    let mut input = "
+@0
+D=M
+@23
+D;JLE
+@16
+M=D
+@16384
+D=A
+@17
+M=D
+@17
+A=M
+M=-1
+@17
+D=M
+@32
+D=D+A
+@17
+M=D
+@16
+MD=M-1
+@10
+D;JGT
+@23
+0;JMP
+        "
+    .as_bytes();
+
+    let expect = [
+        CommandKind::A(0b000000000000000),
+        CommandKind::C(0b1110000, 0b010, 0b000),
+        CommandKind::A(0b000000000010111),
+        CommandKind::C(0b0001100, 0b000, 0b110),
+        CommandKind::A(0b000000000010000),
+        CommandKind::C(0b0001100, 0b001, 0b000),
+        CommandKind::A(0b100000000000000),
+        CommandKind::C(0b0110000, 0b010, 0b000),
+        CommandKind::A(0b000000000010001),
+        CommandKind::C(0b0001100, 0b001, 0b000),
+        CommandKind::A(0b000000000010001),
+        CommandKind::C(0b1110000, 0b100, 0b000),
+        CommandKind::C(0b0111010, 0b001, 0b000),
+        CommandKind::A(0b000000000010001),
+        CommandKind::C(0b1110000, 0b010, 0b000),
+        CommandKind::A(0b000000000100000),
+        CommandKind::C(0b0000010, 0b010, 0b000),
+        CommandKind::A(0b000000000010001),
+        CommandKind::C(0b0001100, 0b001, 0b000),
+        CommandKind::A(0b000000000010000),
+        CommandKind::C(0b1110010, 0b011, 0b000),
+        CommandKind::A(0b000000000001010),
+        CommandKind::C(0b0001100, 0b000, 0b001),
+        CommandKind::A(0b000000000010111),
+        CommandKind::C(0b0101010, 0b000, 0b111),
+    ];
+    let mut tokens = lex_all(&mut input).unwrap();
+    let cmds = parse(&mut tokens).unwrap();
+    for (i, cmd) in cmds.into_iter().enumerate() {
+        let result = Annot::new(expect[i].clone(), Loc::new(0, 0, 0));
+        assert!(
+            result.value() == cmd.value(),
+            "\nexpect: {:?},\n\
              cmd:    {:?}",
             result,
             cmd

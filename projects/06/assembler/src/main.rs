@@ -9,7 +9,7 @@ fn main() {
   } else {
     let path = Path::new(&args[1]);
     match assembler(path) {
-      Ok(_) => println!("Sucess!, finish hack binary!"),
+      Ok(_) => println!("Sucess!, finish to write a hack binary!"),
       Err(e) => eprintln!("{:?}", e),
     }
   }
