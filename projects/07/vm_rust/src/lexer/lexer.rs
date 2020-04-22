@@ -71,25 +71,6 @@ pub fn lexer(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
     Ok(tokens)
 }
 
-/// posのバイトが期待するものであれば１バイト消費してposを１進めるヘルパーメソッド
-fn consume_byte(input: &[u8], line: usize, pos: usize, b: u8) -> Result<(u8, usize), LexError> {
-    // posが入力サイズ以上なら入力が終わっている
-    // 一ばいと期待しているのに終わっているのでエラー
-    if input.len() <= pos {
-        return Err(LexError::eof(Loc::new(line, pos, pos + 1)));
-    }
-
-    // 入力が期待するものでなければエラー
-    if input[pos] != b {
-        return Err(LexError::invalid_char(
-            input[pos] as char,
-            Loc::new(line, pos, pos + 1),
-        ));
-    }
-
-    Ok((b, pos + 1))
-}
-
 /// 空白を飛ばすヘルパーメソッド
 fn skip_whitespaces(input: &[u8], pos: usize) -> Result<((), usize), LexError> {
     let pos = recognize_many(input, pos, |b| b" \n\t".contains(&b));
