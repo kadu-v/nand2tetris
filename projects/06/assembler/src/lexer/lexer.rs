@@ -149,11 +149,11 @@ fn consume_byte(input: &[u8], line: usize, pos: usize, b: u8) -> Result<(u8, usi
 }
 
 fn skip_whitespaces(input: &[u8], pos: usize) -> Result<((), usize), LexError> {
-    let pos = recoginize_many(input, pos, |b| b" \n\t".contains(&b));
+    let pos = recognize_many(input, pos, |b| b" \n\t".contains(&b));
     Ok(((), pos))
 }
 
-fn recoginize_many(input: &[u8], mut pos: usize, f: impl Fn(u8) -> bool) -> usize {
+fn recognize_many(input: &[u8], mut pos: usize, f: impl Fn(u8) -> bool) -> usize {
     while pos < input.len() && f(input[pos]) {
         pos += 1;
     }
@@ -178,14 +178,14 @@ fn lex_at_sign(input: &[u8], line: usize, start: usize) -> Result<(Token, usize)
 fn lex_number(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
     use std::str::from_utf8;
     // 入力に数字が続くかぎり進める
-    let end = recoginize_many(input, start, |b| b"1234567890".contains(&b));
+    let end = recognize_many(input, start, |b| b"1234567890".contains(&b));
     let n = from_utf8(&input[start..end]).unwrap().parse().unwrap();
     Ok((Token::number(n, Loc::new(line, start, end)), end))
 }
 
 fn lex_symbol(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
     use std::str::from_utf8;
-    let end = recoginize_many(input, start, |b| {
+    let end = recognize_many(input, start, |b| {
         let c = b as char;
         c.is_alphabetic() || c.is_digit(10) || b"_.$".contains(&b)
     });
@@ -338,3 +338,5 @@ fn test_lex() {
         assert_eq!(expect[i], tok);
     }
 }
+
+
