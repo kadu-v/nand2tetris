@@ -14,15 +14,6 @@ pub fn lexer(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
     // 現在読み込み中の位置を管理する値
     let mut pos = 0;
 
-    // サブレキサーを呼んだ後にposを更新するマクロ
-    macro_rules! lex_a_token {
-        ($lexer:expr) => {{
-            let (tok, p) = $lexer?;
-            tokens.push(tok);
-            pos = p;
-        }};
-    };
-
     while pos < input.len() {
         match input[pos] {
             b'a'..=b'z' | b'A'..=b'Z' | b'.' | b'_' | b'$' => {
@@ -37,8 +28,23 @@ pub fn lexer(input: &str, line: usize) -> Result<Vec<Token>, LexError> {
                     b"and" => Token::and(tok.loc().clone()),
                     b"or" => Token::or(tok.loc().clone()),
                     b"not" => Token::not(tok.loc().clone()),
+                    b"push" => Token::push(tok.loc().clone()),
+                    b"pop" => Token::pop(tok.loc().clone()),
+                    b"argument" => Token::argument(tok.loc().clone()),
+                    b"local" => Token::local(tok.loc().clone()),
+                    b"static" => Token::static_(tok.loc().clone()),
+                    b"constant" => Token::constant(tok.loc().clone()),
+                    b"this" => Token::this(tok.loc().clone()),
+                    b"that" => Token::that(tok.loc().clone()),
+                    b"pointer" => Token::pointer(tok.loc().clone()),
+                    b"temp" => Token::temp(tok.loc().clone()),
                     _ => tok,
                 };
+                pos = p;
+                tokens.push(tok);
+            }
+            b'0'..=b'9' => {
+                let (tok, p) = lex_number(input, line, pos)?;
                 pos = p;
                 tokens.push(tok);
             }
@@ -124,6 +130,15 @@ fn lex_symbol(input: &[u8], line: usize, start: usize) -> Result<(Token, usize),
     }
 }
 
+/// 数字を字句解析するヘルパーメソッド
+fn lex_number(input: &[u8], line: usize, start: usize) -> Result<(Token, usize), LexError> {
+    use std::str::from_utf8;
+    // 入力に数字が続くかぎり進める
+    let end = recognize_many(input, start, |b| b"1234567890".contains(&b));
+    let n = from_utf8(&input[start..end]).unwrap().parse().unwrap();
+    Ok((Token::number(n, Loc::new(line, start, end)), end))
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///
 /// UNIT TEST
@@ -132,7 +147,10 @@ fn lex_symbol(input: &[u8], line: usize, start: usize) -> Result<(Token, usize),
 
 #[test]
 fn test_lexer() {
-    let input = "add sub neg eq gt lt and or not";
+    let input = "add sub neg eq gt lt and or not \
+                 push pop \
+                 argument local static constant this that pointer temp \
+                 1234 identifier symbol.symbol // this is comment";
     let res = lexer(input, 0);
     let tokens = res.ok().unwrap();
     let expect = vec![
@@ -145,6 +163,19 @@ fn test_lexer() {
         Token::and(Loc::new(0, 21, 24)),
         Token::or(Loc::new(0, 25, 27)),
         Token::not(Loc::new(0, 28, 31)),
+        Token::push(Loc::new(0, 32, 36)),
+        Token::pop(Loc::new(0, 37, 40)),
+        Token::argument(Loc::new(0, 41, 49)),
+        Token::local(Loc::new(0, 50, 55)),
+        Token::static_(Loc::new(0, 56, 62)),
+        Token::constant(Loc::new(0, 63, 71)),
+        Token::this(Loc::new(0, 72, 76)),
+        Token::that(Loc::new(0, 77, 81)),
+        Token::pointer(Loc::new(0, 82, 89)),
+        Token::temp(Loc::new(0, 90, 94)),
+        Token::number(1234, Loc::new(0, 95, 99)),
+        Token::symbol("identifier", Loc::new(0, 100, 110)),
+        Token::symbol("symbol.symbol", Loc::new(0, 111, 124)),
     ];
     assert_eq!(tokens.len(), expect.len());
     for (i, tok) in tokens.into_iter().enumerate() {

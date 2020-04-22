@@ -5,7 +5,7 @@ use crate::loc::*;
 
 // TokenKind for Hack VM
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum TokenKind {
+pub enum TokenKind {
     // 数字とシンボル
     Number(u16),
     Symbol(String),
@@ -32,7 +32,7 @@ enum TokenKind {
     Constant,
     This,
     That,
-    Porinter,
+    Pointer,
     Temp,
 }
 
@@ -43,8 +43,8 @@ impl Token {
         Self::new(TokenKind::Number(n), loc)
     }
 
-    pub fn symbol(s: String, loc: Loc) -> Self {
-        Self::new(TokenKind::Symbol(s), loc)
+    pub fn symbol(s: impl Into<String>, loc: Loc) -> Self {
+        Self::new(TokenKind::Symbol(s.into()), loc)
     }
 
     pub fn add(loc: Loc) -> Self {
@@ -99,7 +99,7 @@ impl Token {
         Self::new(TokenKind::Local, loc)
     }
 
-    pub fn _static(loc: Loc) -> Self {
+    pub fn static_(loc: Loc) -> Self {
         Self::new(TokenKind::Static, loc)
     }
 
@@ -116,7 +116,7 @@ impl Token {
     }
 
     pub fn pointer(loc: Loc) -> Self {
-        Self::new(TokenKind::Porinter, loc)
+        Self::new(TokenKind::Pointer, loc)
     }
 
     pub fn temp(loc: Loc) -> Self {
