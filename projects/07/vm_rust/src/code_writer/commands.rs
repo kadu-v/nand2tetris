@@ -1,6 +1,7 @@
 //! Commands for Hack VM
 use crate::code_writer::segments::*;
 
+#[derive(Debug, Eq, PartialEq)]
 pub enum Commands {
     // Arithmatic commands
     Add,
