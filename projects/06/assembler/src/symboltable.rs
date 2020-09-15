@@ -95,7 +95,7 @@ fn test_symbol_table() {
     let tokens = lex_all(&mut input).unwrap();
     let table = SymbolTable::make(&tokens);
     for (key, value) in expect.into_iter() {
-        let key = key.clone().to_string();
+        let key = key.to_string();
         assert_eq!(value, table.get_address(&key).unwrap());
     }
 }
