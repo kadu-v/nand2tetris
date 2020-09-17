@@ -1,3 +1,3 @@
 pub mod code_writer;
-mod commands;
+pub mod commands;
 mod segments;

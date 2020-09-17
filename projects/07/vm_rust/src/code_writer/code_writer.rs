@@ -26,7 +26,7 @@ impl<'a, T: Write> CodeWriter<'a, T> {
             Commands::And => self.write_and(),
             Commands::Or => self.write_or(),
             Commands::Not => self.write_not(),
-            _ => panic!(),
+            _ => todo!("Error型をstd::io::Errorと統合して，unreachableなError型を作る"),
         }
     }
 
@@ -35,12 +35,12 @@ impl<'a, T: Write> CodeWriter<'a, T> {
         match cmd {
             Commands::Push(seg, idx) => self.write_push(seg, idx),
             Commands::Pop(seg, idx) => self.write_pop(seg, idx),
-            _ => panic!(),
+            _ => todo!("Error型をstd::io::Errorと統合して，unreachableなError型を作る"),
         }
     }
 
     /// Add に対応するアセンブラ を生成するメヘルパーメソッド
-    pub fn write_add(&mut self) -> Result<(), std::io::Error> {
+    fn write_add(&mut self) -> Result<(), std::io::Error> {
         // RAM[@SP] == nとする
         writeln!(self.buf, "//--add命令のアセンブラ ")?;
         writeln!(self.buf, "@SP   // SPをAにセット")?;
@@ -53,61 +53,88 @@ impl<'a, T: Write> CodeWriter<'a, T> {
 
     /// Sub に対応するアセンブラ を生成するヘルパーメソッド
     fn write_sub(&mut self) -> Result<(), std::io::Error> {
+        // RAM[@SP] == nとする
         writeln!(self.buf, "//--sub命令のアセンブラ ")?;
-        unimplemented!()
+        writeln!(self.buf, "@SP   // SPをAにセット")?;
+        writeln!(self.buf, "M=M-1 // RAM[SP]をデクリメント (RAM[SP] = n-1)")?;
+        writeln!(self.buf, "A=M   // RAM[SP]をAにセット (RAM[SP] = n-1)")?;
+        writeln!(self.buf, "D=M   // DレジスタにRAM「nー1]を退避")?;
+        writeln!(self.buf, "A=A-1 // Aをデクリメント")?;
+        writeln!(self.buf, "M=M-D // RAM[n-2] - RAM[n-1]")
     }
 
     /// Neg に対応するアセンブラ を生成するヘルパーメソッド
     fn write_neg(&mut self) -> Result<(), std::io::Error> {
-        writeln!(self.buf, "//--neg命令のアセンブラ ");
-        unimplemented!()
+        // RAM[@SP] == nとする
+        writeln!(self.buf, "//--neg命令のアセンブラ ")?;
+        writeln!(self.buf, "@SP   // SPをAにセット")?;
+        writeln!(self.buf, "A=M-1 // Aレジスタにn-1をセット")?;
+        writeln!(self.buf, "M=-M  // RAM[n-1]の符号を反転")
     }
 
     /// Eqに対応するアセンブラ を生成するヘルパーメソッド
     fn write_eq(&mut self) -> Result<(), std::io::Error> {
-        writeln!(self.buf, "//--eq命令のアセンブラ ");
+        // RAM[@SP] == nとする
+        writeln!(self.buf, "//--eq命令のアセンブラ ")?;
         unimplemented!()
     }
 
     /// Gtに対応するアセンブラ を生成するヘルパーメソッド
     fn write_gt(&mut self) -> Result<(), std::io::Error> {
-        writeln!(self.buf, "//--gt命令のアセンブラ ");
+        // RAM[@SP] == nとする
+        writeln!(self.buf, "//--gt命令のアセンブラ ")?;
         unimplemented!()
     }
 
     /// Ltに対応するアセンブラ を生成するヘルパーメソッド
     fn write_lt(&mut self) -> Result<(), std::io::Error> {
-        writeln!(self.buf, "//--lt命令のアセンブラ ");
+        // RAM[@SP] == nとする
+        writeln!(self.buf, "//--lt命令のアセンブラ ")?;
         unimplemented!()
     }
 
     /// Andに対応するアセンブラ を生成するヘルパーメソッド
     fn write_and(&mut self) -> Result<(), std::io::Error> {
-        writeln!(self.buf, "//--and命令のアセンブラ ");
-        unimplemented!()
+        // RAM[@SP] == nとする
+        writeln!(self.buf, "//--and命令のアセンブラ ")?;
+        writeln!(self.buf, "@SP   // SPをAにセット")?;
+        writeln!(self.buf, "M=M-1 // RAM[SP]をデクリメント (RAM[SP] = n-1)")?;
+        writeln!(self.buf, "A=M   // RAM[SP]をAにセット (RAM[SP] = n-1)")?;
+        writeln!(self.buf, "D=M   // DレジスタにRAM「nー1]を退避")?;
+        writeln!(self.buf, "A=A-1 // Aをデクリメント")?;
+        writeln!(self.buf, "M=M&D // RAM[n-2] & RAM[n-1]")
     }
 
     /// Or に対応するアセンブラ を生成するヘルパーメソッド
     fn write_or(&mut self) -> Result<(), std::io::Error> {
-        writeln!(self.buf, "//--or命令のアセンブラ ");
-        unimplemented!()
+        // RAM[@SP] == nとする
+        writeln!(self.buf, "//--or命令のアセンブラ ")?;
+        writeln!(self.buf, "@SP   // SPをAにセット")?;
+        writeln!(self.buf, "M=M-1 // RAM[SP]をデクリメント (RAM[SP] = n-1)")?;
+        writeln!(self.buf, "A=M   // RAM[SP]をAにセット (RAM[SP] = n-1)")?;
+        writeln!(self.buf, "D=M   // DレジスタにRAM「nー1]を退避")?;
+        writeln!(self.buf, "A=A-1 // Aをデクリメント")?;
+        writeln!(self.buf, "M=M|D // RAM[n-2] | RAM[n-1]")
     }
 
     /// Not に対応するアセンブラ を生成するヘルパーメソッド
     fn write_not(&mut self) -> Result<(), std::io::Error> {
-        writeln!(self.buf, "//--not命令のアセンブラ ");
-        unimplemented!()
+        // RAM[@SP] == nとする
+        writeln!(self.buf, "//--not命令のアセンブラ ")?;
+        writeln!(self.buf, "@SP   // SPをAにセット")?;
+        writeln!(self.buf, "A=M-1 // Aレジスタにn-1をセット")?;
+        writeln!(self.buf, "M=!M  // RAM[n-1]をビット反転")
     }
 
     /// Pushに対するアセンブラ を生成するヘルパーメソッド
     fn write_push(&mut self, seg: Segments, idx: u16) -> Result<(), std::io::Error> {
-        writeln!(self.buf, "//--push {:?} {:?} 命令のアセンブラ", seg, idx);
+        writeln!(self.buf, "//--push {:?} {:?} 命令のアセンブラ", seg, idx)?;
         unimplemented!()
     }
 
     /// Popに対するアセンブラ を生成するヘルパーメソッド
     fn write_pop(&mut self, seg: Segments, idx: u16) -> Result<(), std::io::Error> {
-        writeln!(self.buf, "//--pop {:?} {:?} 命令のアセンブラ", seg, idx);
+        writeln!(self.buf, "//--pop {:?} {:?} 命令のアセンブラ", seg, idx)?;
         unimplemented!()
     }
 }

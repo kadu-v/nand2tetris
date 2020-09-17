@@ -1,5 +1,6 @@
 use std::io::{stdout, BufWriter};
 use vm_rust::code_writer::code_writer::*;
+use vm_rust::code_writer::commands::*;
 use vm_rust::lexer::lexer::*;
 
 fn main() {
@@ -17,5 +18,22 @@ fn main() {
 
     let mut buf = BufWriter::new(stdout());
     let mut cdw = CodeWriter::new(&mut buf);
-    cdw.write_add();
+    let cmds = vec![
+        Commands::Add,
+        Commands::Sub,
+        Commands::Neg,
+        //Commands::Eq,
+        //Commands::Gt,
+        //Commands::Lt,
+        Commands::And,
+        Commands::Or,
+        Commands::Not,
+    ];
+
+    for cmd in cmds {
+        match cdw.write_arithmatic(cmd) {
+            Err(e) => println!("{:?}", e),
+            _ => continue,
+        }
+    }
 }
