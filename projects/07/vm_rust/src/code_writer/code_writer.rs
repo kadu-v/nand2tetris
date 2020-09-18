@@ -5,13 +5,17 @@ use std::io::{BufWriter, Write};
 
 pub struct CodeWriter<'a, T: Write> {
     buf: &'a mut BufWriter<T>,
+    label_counter: usize,
 }
 
 impl<'a, T: Write> CodeWriter<'a, T> {
     // コンストラクター
     // ファイルのbufferを受け取って，CodeWriter構造体を生成する
     pub fn new(buf: &mut BufWriter<T>) -> CodeWriter<T> {
-        CodeWriter { buf }
+        CodeWriter {
+            buf,
+            label_counter: 0,
+        }
     }
 
     /// 算術コマンドと論理コマンドを受け取って，対応するアセンブリコードを生成する．
@@ -76,21 +80,81 @@ impl<'a, T: Write> CodeWriter<'a, T> {
     fn write_eq(&mut self) -> Result<(), std::io::Error> {
         // RAM[@SP] == nとする
         writeln!(self.buf, "//--eq命令のアセンブラ ")?;
-        unimplemented!()
+        writeln!(self.buf, "@SP")?;
+        writeln!(self.buf, "M=M-1")?;
+        writeln!(self.buf, "D=M")?;
+        writeln!(self.buf, "A=A-1")?;
+        writeln!(self.buf, "D=M-D")?;
+        writeln!(self.buf, "@TRUE{}", self.label_counter)?;
+        writeln!(self.buf, "D;JEQ")?;
+        writeln!(self.buf, "@SP")?;
+        writeln!(self.buf, "A=M")?;
+        writeln!(self.buf, "A=A-1")?;
+        writeln!(self.buf, "M=0")?;
+        writeln!(self.buf, "@NEXT{}", self.label_counter)?;
+        writeln!(self.buf, "0;JMP")?;
+        writeln!(self.buf, "(TRUE{})", self.label_counter)?;
+        writeln!(self.buf, "@SP")?;
+        writeln!(self.buf, "A=M")?;
+        writeln!(self.buf, "A=A-1")?;
+        writeln!(self.buf, "M=-1")?;
+        let ret = writeln!(self.buf, "(NEXT{})", self.label_counter);
+        self.label_counter += 1;
+        ret
     }
 
     /// Gtに対応するアセンブラ を生成するヘルパーメソッド
     fn write_gt(&mut self) -> Result<(), std::io::Error> {
         // RAM[@SP] == nとする
         writeln!(self.buf, "//--gt命令のアセンブラ ")?;
-        unimplemented!()
+        writeln!(self.buf, "@SP")?;
+        writeln!(self.buf, "M=M-1")?;
+        writeln!(self.buf, "D=M")?;
+        writeln!(self.buf, "A=A-1")?;
+        writeln!(self.buf, "D=M-D")?;
+        writeln!(self.buf, "@TRUE{}", self.label_counter)?;
+        writeln!(self.buf, "D;JGT")?;
+        writeln!(self.buf, "@SP")?;
+        writeln!(self.buf, "A=M")?;
+        writeln!(self.buf, "A=A-1")?;
+        writeln!(self.buf, "M=0")?;
+        writeln!(self.buf, "@NEXT{}", self.label_counter)?;
+        writeln!(self.buf, "0;JMP")?;
+        writeln!(self.buf, "(TRUE{})", self.label_counter)?;
+        writeln!(self.buf, "@SP")?;
+        writeln!(self.buf, "A=M")?;
+        writeln!(self.buf, "A=A-1")?;
+        writeln!(self.buf, "M=-1")?;
+        let ret = writeln!(self.buf, "(NEXT{})", self.label_counter);
+        self.label_counter += 1;
+        ret
     }
 
     /// Ltに対応するアセンブラ を生成するヘルパーメソッド
     fn write_lt(&mut self) -> Result<(), std::io::Error> {
         // RAM[@SP] == nとする
         writeln!(self.buf, "//--lt命令のアセンブラ ")?;
-        unimplemented!()
+        writeln!(self.buf, "@SP")?;
+        writeln!(self.buf, "M=M-1")?;
+        writeln!(self.buf, "D=M")?;
+        writeln!(self.buf, "A=A-1")?;
+        writeln!(self.buf, "D=M-D")?;
+        writeln!(self.buf, "@TRUE{}", self.label_counter)?;
+        writeln!(self.buf, "D;JLT")?;
+        writeln!(self.buf, "@SP")?;
+        writeln!(self.buf, "A=M")?;
+        writeln!(self.buf, "A=A-1")?;
+        writeln!(self.buf, "M=0")?;
+        writeln!(self.buf, "@NEXT{}", self.label_counter)?;
+        writeln!(self.buf, "0;JMP")?;
+        writeln!(self.buf, "(TRUE{})", self.label_counter)?;
+        writeln!(self.buf, "@SP")?;
+        writeln!(self.buf, "A=M")?;
+        writeln!(self.buf, "A=A-1")?;
+        writeln!(self.buf, "M=-1")?;
+        let ret = writeln!(self.buf, "(NEXT{})", self.label_counter);
+        self.label_counter += 1;
+        ret
     }
 
     /// Andに対応するアセンブラ を生成するヘルパーメソッド
