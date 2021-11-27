@@ -50,7 +50,7 @@ impl<'a, T: Write> CodeWriter<'a, T> {
         writeln!(self.buf, "@SP   // SPをAにセット")?;
         writeln!(self.buf, "M=M-1 // RAM[SP]をデクリメント (RAM[SP] = n-1)")?;
         writeln!(self.buf, "A=M   // RAM[SP]をAにセット (RAM[SP] = n-1)")?;
-        writeln!(self.buf, "D=M   // DレジスタにRAM「nー1]を退避")?;
+        writeln!(self.buf, "D=M   // DレジスタにRAM[n-1]を退避")?;
         writeln!(self.buf, "A=A-1 // Aをデクリメント")?;
         writeln!(self.buf, "M=M+D // RAM[n-2] + RAM[n-1]")
     }

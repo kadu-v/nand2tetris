@@ -6,3 +6,4 @@ tools/*
 
 # ignore *.tst
 */**/*.tst
+target/
