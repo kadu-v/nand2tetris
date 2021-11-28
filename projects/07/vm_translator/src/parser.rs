@@ -39,6 +39,10 @@ impl<'a> Parser<'a> {
                 self.next_token();
                 Ok(EOTOK)
             }
+            NewLine => {
+                self.next_token();
+                self.parse_one()
+            }
             Add | Sub | Neg | Eq | Lt | Gt | And | Or | Not => self.parse_arithmatic(),
             Push => self.parse_push(),
             Pop => self.parse_pop(),

@@ -16,7 +16,7 @@ fn main() {
 
     let input_file_path = Path::new(&args[1]);
     let output_file_path = match input_file_path.extension().and_then(OsStr::to_str) {
-        Some("vm") => input_file_path.with_extension("as"),
+        Some("vm") => input_file_path.with_extension("asm"),
         _ => {
             eprintln!("file extension is not *.vm !");
             process::exit(1);

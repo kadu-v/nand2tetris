@@ -8,7 +8,7 @@ static KEYWORDS: Lazy<HashMap<&str, TokenKind>> = Lazy::new(|| {
         ("add", TokenKind::Add),
         ("sub", TokenKind::Sub),
         ("neg", TokenKind::Neg),
-        ("eq", TokenKind::Neg),
+        ("eq", TokenKind::Eq),
         ("gt", TokenKind::Gt),
         ("lt", TokenKind::Lt),
         ("and", TokenKind::And),

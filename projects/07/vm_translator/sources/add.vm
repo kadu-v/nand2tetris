@@ -2,3 +2,4 @@ add
 sub 
 neg
 push constant 0
+eq

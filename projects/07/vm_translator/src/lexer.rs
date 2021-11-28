@@ -37,6 +37,11 @@ impl<'a> Lexer<'a> {
                 loc: Loc::new(self.line, self.pos, 0),
             },
             Some(c) => match c {
+                b'/' => {
+                    self.skip_comment();
+                    self.line += 1;
+                    self.next_token()
+                }
                 b'\n' => {
                     self.line += 1;
                     let tok = Token {
@@ -99,6 +104,12 @@ impl<'a> Lexer<'a> {
     }
 
     //
+    fn skip_comment(&mut self) {
+        while !self.is_newline() {
+            self.read_char();
+        }
+        self.read_char()
+    }
 
     // 空白を読み飛ばす
     fn skip_whitespaces(&mut self) {
