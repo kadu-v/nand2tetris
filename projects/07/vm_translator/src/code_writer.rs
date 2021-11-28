@@ -19,7 +19,7 @@ impl<'a, T: Write> CodeWriter<'a, T> {
 
     pub fn write(&mut self, cmd: Command) -> Result<(), std::io::Error> {
         match cmd {
-            ADD | SUB | NEG | EQ | LT | AND | OR | NOT => self.write_arithmatic(cmd),
+            ADD | SUB | NEG | EQ | GT | LT | AND | OR | NOT => self.write_arithmatic(cmd),
             PUSH(..) | POP(..) => self.write_push_pop(cmd),
             _ => unimplemented!("{:?}", cmd),
         }
